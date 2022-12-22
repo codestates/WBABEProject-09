@@ -1,0 +1,92 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/owner/menu": {
+            "post": {
+                "description": "menu data 추가를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call InsertMenuControl, return menu data by model.Menu.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "menu{category, name, price, recommend, orderState, orderDailyLimit}",
+                        "name": "menu",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Menu"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Menu"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "model.Menu": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "integer"
+                },
+                "createAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "modifyAt": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "orderCount": {
+                    "type": "integer"
+                },
+                "orderDailyLimit": {
+                    "type": "integer"
+                },
+                "orderState": {
+                    "type": "integer"
+                },
+                "price": {
+                    "type": "integer"
+                },
+                "recommend": {
+                    "type": "boolean"
+                },
+                "reorderCount": {
+                    "type": "integer"
+                },
+                "star": {
+                    "type": "number"
+                },
+                "use": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

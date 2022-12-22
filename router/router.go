@@ -4,8 +4,12 @@ import (
 	"fmt"
 
 	ctl "WBABEProject-09/controller"
+	"WBABEProject-09/docs"
+	"WBABEProject-09/logger"
 
 	"github.com/gin-gonic/gin"
+	swgFiles "github.com/swaggo/files"
+	ginSwg "github.com/swaggo/gin-swagger"
 )
 
 type Router struct {
@@ -52,14 +56,22 @@ func (p *Router) Idx() *gin.Engine {
 
 	e.Use(gin.Logger())
 	e.Use(gin.Recovery())
+	e.Use(logger.GinLogger())
+	e.Use(logger.GinRecovery(true))
 	e.Use(CORS())
+	//swagger 핸들러 미들웨어에 등록
+	e.GET("/swagger/:any", ginSwg.WrapHandler(swgFiles.Handler))
+	docs.SwaggerInfo.Host = "localhost"
 
-	owner := e.Group("/owner", liteAuth())
+	owner := e.Group("owner", liteAuth())
 	{
 		owner.GET("/menu", p.ct.GetOK) // 임시로 GetOk로 연결
+		owner.POST("/menu", p.ct.InsertMenuControl)
+		owner.PUT("/menu", p.ct.GetOK)
+		owner.DELETE("/menu", p.ct.GetOK)
 	}
 
-	customer := e.Group("/customer", liteAuth())
+	customer := e.Group("customer", liteAuth())
 	{
 		customer.GET("/menu", p.ct.GetOK)
 	}

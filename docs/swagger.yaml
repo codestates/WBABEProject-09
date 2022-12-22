@@ -1,0 +1,59 @@
+definitions:
+  model.Menu:
+    properties:
+      category:
+        type: integer
+      createAt:
+        type: string
+      id:
+        type: string
+      modifyAt:
+        type: string
+      name:
+        type: string
+      orderCount:
+        type: integer
+      orderDailyLimit:
+        type: integer
+      orderState:
+        type: integer
+      price:
+        type: integer
+      recommend:
+        type: boolean
+      reorderCount:
+        type: integer
+      star:
+        type: number
+      use:
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /owner/menu:
+    post:
+      consumes:
+      - application/json
+      description: menu data 추가를 위한 기능.
+      parameters:
+      - description: User ID
+        in: query
+        name: userId
+        required: true
+        type: string
+      - description: menu{category, name, price, recommend, orderState, orderDailyLimit}
+        in: body
+        name: menu
+        required: true
+        schema:
+          $ref: '#/definitions/model.Menu'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Menu'
+      summary: call InsertMenuControl, return menu data by model.Menu.
+swagger: "2.0"
