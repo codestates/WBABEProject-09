@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	conf "WBABEProject-09/config"
@@ -72,17 +73,6 @@ type Menu struct {
 	ModifyAt        time.Time           `bson:"modifyAt"`
 }
 
-type InsertMenu struct {
-	Category        int       `bson:"category"`
-	Name            string    `bson:"name"`
-	Price           int       `bson:"price"`
-	Recommend       bool      `bson:"recommend"`
-	OrderState      int       `bson:"orderState"`
-	OrderDailyLimit int       `bson:"orderDailyLimit"`
-	CreateAt        time.Time `bson:"createAt"`
-	ModifyAt        time.Time `bson:"modifyAt"`
-}
-
 func NewModel(cfg *conf.Config) (*Model, error) {
 	r := &Model{}
 	var err error
@@ -102,8 +92,8 @@ func NewModel(cfg *conf.Config) (*Model, error) {
 	return r, nil
 }
 
-func NewMenu() *Menu {
-	return &Menu{
+func NewMenu() Menu {
+	return Menu{
 		OrderState:   1,
 		OrderCount:   0,
 		Star:         0,
@@ -130,9 +120,9 @@ func (p *Model) GetUserTypeByIdModel(userId string) (*User, error) {
 	return &user, nil
 }
 
-func (p *Model) InsertMenuModel(userId string, MenuData Menu) (*Menu, error) {
+func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
 
-	res, err := p.menuCol.InsertOne(context.TODO(), MenuData)
+	res, err := p.menuCol.InsertOne(context.TODO(), menuData)
 
 	if err != nil {
 		log.Error("메뉴 추가 에러", err.Error())
@@ -141,7 +131,53 @@ func (p *Model) InsertMenuModel(userId string, MenuData Menu) (*Menu, error) {
 	var newMenu Menu
 	query := bson.M{"_id": res.InsertedID}
 	if err = p.menuCol.FindOne(context.TODO(), query).Decode(&newMenu); err != nil {
+		log.Error("메뉴 추가 후 조회 에러", err.Error())
 		return nil, err
 	}
 	return &newMenu, err
+}
+
+func (p *Model) UpdateMenuModel(menuId string, menuData Menu) error {
+
+	var oldMenu Menu
+	objectId, _ := primitive.ObjectIDFromHex(menuId)
+	findFilter := bson.M{"_id": objectId}
+	if err := p.menuCol.FindOne(context.TODO(), findFilter).Decode(&oldMenu); err != nil {
+		log.Error("메뉴 조회 에러", err.Error())
+		return err
+	}
+
+	updateTarget := bson.D{}
+	switch {
+	case menuData.Category != oldMenu.Category:
+		updateTarget = append(updateTarget, bson.E{"category", menuData.Category})
+		fallthrough
+	case menuData.Name != oldMenu.Name:
+		updateTarget = append(updateTarget, bson.E{"name", menuData.Name})
+		fallthrough
+	case menuData.Price != oldMenu.Price:
+		updateTarget = append(updateTarget, bson.E{"price", menuData.Price})
+		fallthrough
+	case menuData.Recommend != oldMenu.Recommend:
+		updateTarget = append(updateTarget, bson.E{"recommend", menuData.Recommend})
+		fallthrough
+	case menuData.OrderState != oldMenu.OrderState:
+		updateTarget = append(updateTarget, bson.E{"orderState", menuData.OrderState})
+		fallthrough
+	case menuData.OrderDailyLimit != oldMenu.OrderDailyLimit:
+		updateTarget = append(updateTarget, bson.E{"orderDailyLimit", menuData.OrderDailyLimit})
+		fallthrough
+	default:
+		updateTarget = append(updateTarget, bson.E{"modifyAt", time.Now()})
+	}
+
+	updateFilter := bson.M{"_id": objectId}
+	update := bson.D{{"$set", updateTarget}}
+	res, err := p.menuCol.UpdateOne(context.TODO(), updateFilter, update)
+	fmt.Println(res)
+	if err != nil {
+		log.Error("메뉴 수정 에러", err.Error())
+	}
+
+	return err
 }
