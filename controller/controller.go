@@ -2,6 +2,7 @@ package controller
 
 import (
 	"WBABEProject-09/model"
+	ut "WBABEProject-09/type/user"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -28,6 +29,58 @@ func (p *Controller) CheckUser(userId string) (int, error) {
 	return user.Type, err
 }
 
+// user ID 및 Type에대한 유효성 검사를 공통적으로 수행하기 위해 선언
+func (p *Controller) UserValidation(c *gin.Context, targetUserType int, userId string) bool {
+
+	if userId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "user ID가 유효하지 않습니다",
+		})
+		return false
+	}
+	userType, err := p.CheckUser(userId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "유저 정보를 확인할 수 없습니다!",
+			"error":   err.Error(),
+		})
+		return false
+	} else if userType != targetUserType {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message":  "유저 타입이 일치하지 않습니다!",
+			"userType": ut.GetUserTypeText(userType),
+		})
+		return false
+	}
+
+	return true
+}
+
+// menu ID에 대한 유효성 검사를 공통적으로 수행하기 위해 선언
+func (p *Controller) MenuValidation(c *gin.Context, menuId string) bool {
+	if menuId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "menu ID가 유효하지 않습니다",
+		})
+		return false
+	}
+
+	return true
+}
+
+// menu 관련 controller에서 사용되는 Bind이 중복되기에 별도로 분리
+func (p *Controller) MenuBind(c *gin.Context, menu *model.Menu) bool {
+
+	if err := c.ShouldBindJSON(&menu); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "메뉴 정보가 잘못됬습니다!",
+			"error":   err.Error(),
+		})
+		return false
+	}
+	return true
+}
+
 // InsertMenuControl godoc
 //
 //	@Summary		call InsertMenuControl, return menu data by model.Menu.
@@ -42,33 +95,11 @@ func (p *Controller) CheckUser(userId string) (int, error) {
 func (p *Controller) InsertMenuControl(c *gin.Context) {
 
 	userId := c.GetHeader("userId")
-	if userId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "user ID가 유효하지 않습니다",
-		})
+	if !p.UserValidation(c, ut.TypeOwner, userId) {
 		return
 	}
-	userType, err := p.CheckUser(userId)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저 정보를 확인할 수 없습니다!",
-			"error":   err.Error(),
-		})
-		return
-	} else if userType != 1 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저가 피주문자가 아닙니다!",
-			"error":   err.Error(),
-		})
-		return
-	}
-
 	menu := model.NewMenu()
-	if err := c.ShouldBindJSON(&menu); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴 정보가 잘못됬습니다!",
-			"error":   err.Error(),
-		})
+	if !p.MenuBind(c, &menu) {
 		return
 	}
 
@@ -101,38 +132,16 @@ func (p *Controller) UpdateMenuControl(c *gin.Context) {
 
 	userId := c.GetHeader("userId")
 	menuId := c.GetHeader("menuId")
-	if menuId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "menu ID가 유효하지 않습니다",
-		})
-		return
-	} else if userId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "user ID가 유효하지 않습니다",
-		})
+
+	if !p.UserValidation(c, ut.TypeOwner, userId) {
 		return
 	}
-	userType, err := p.CheckUser(userId)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저 정보를 확인할 수 없습니다!",
-			"error":   err.Error(),
-		})
-		return
-	} else if userType != 1 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저가 피주문자가 아닙니다!",
-			"error":   err.Error(),
-		})
+	if !p.MenuValidation(c, menuId) {
 		return
 	}
 
 	menu := model.Menu{}
-	if err := c.ShouldBindJSON(&menu); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴 정보가 잘못됬습니다!",
-			"error":   err.Error(),
-		})
+	if !p.MenuBind(c, &menu) {
 		return
 	}
 
@@ -162,29 +171,11 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 
 	userId := c.GetHeader("userId")
 	menuId := c.GetHeader("menuId")
-	if menuId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "menu ID가 유효하지 않습니다",
-		})
-		return
-	} else if userId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "user ID가 유효하지 않습니다",
-		})
+
+	if !p.UserValidation(c, ut.TypeOwner, userId) {
 		return
 	}
-	userType, err := p.CheckUser(userId)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저 정보를 확인할 수 없습니다!",
-			"error":   err.Error(),
-		})
-		return
-	} else if userType != 1 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저가 피주문자가 아닙니다!",
-			"error":   err.Error(),
-		})
+	if !p.MenuValidation(c, menuId) {
 		return
 	}
 
