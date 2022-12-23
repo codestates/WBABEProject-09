@@ -25,53 +25,53 @@ type Model struct {
 
 type User struct {
 	Id       *primitive.ObjectID `bson:"_id,omitempty"`
-	Name     string              `bson:"name"`
-	Email    string              `bson:"email"`
-	Phone    string              `bson:"phone"`
-	Address  string              `bson:"address"`
-	Type     int                 `bson:"type"`
-	Use      bool                `bson:"use"`
-	CreateAt time.Time           `bson:"createAt"`
-	ModifyAt time.Time           `bson:"modifyAt"`
+	Name     string              `json:"name" bson:"name"`
+	Email    string              `json:"email" bson:"email"`
+	Phone    string              `json:"phone" bson:"phone"`
+	Address  string              `json:"address" bson:"address"`
+	Type     int                 `json:"type" bson:"type"`
+	Use      bool                `json:"use" bson:"use"`
+	CreateAt time.Time           `json:"createAt" bson:"createAt"`
+	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 
 type Order struct {
 	Id       *primitive.ObjectID `bson:"_id,omitempty"`
-	User     string              `bson:"user"`
-	Menu     []OrderMenu         `bson:"menu"`
-	Phone    string              `bson:"phone"`
-	Address  string              `bson:"address"`
-	State    int                 `bson:"state"`
-	Review   Review              `bson:"review"`
-	CreateAt time.Time           `bson:"createAt"`
-	ModifyAt time.Time           `bson:"modifyAt"`
+	User     string              `json:"user" bson:"user"`
+	Menu     []OrderMenu         `json:"menu" bson:"menu"`
+	Phone    string              `json:"phone" bson:"phone"`
+	Address  string              `json:"address" bson:"address"`
+	State    int                 `json:"state" bson:"state"`
+	Review   Review              `json:"review" bson:"review"`
+	CreateAt time.Time           `json:"createAt" bson:"createAt"`
+	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 type OrderMenu struct {
-	id string `bson:"name"`
+	id string `json:"name" bson:"name"`
 }
 
 type Review struct {
-	Star     float32   `bson:"star"`
-	Content  string    `bson:"content"`
-	Use      bool      `bson:"use"`
-	CreateAt time.Time `bson:"createAt"`
-	ModifyAt time.Time `bson:"modifyAt"`
+	Star     float32   `json:"star" bson:"star"`
+	Content  string    `json:"content" bson:"content"`
+	Use      bool      `json:"use" bson:"use"`
+	CreateAt time.Time `json:"createAt" bson:"createAt"`
+	ModifyAt time.Time `json:"modifyAt" bson:"modifyAt"`
 }
 
 type Menu struct {
 	Id              *primitive.ObjectID `bson:"_id,omitempty"`
-	Category        int                 `bson:"category"`
-	Name            string              `bson:"name"`
-	Price           int                 `bson:"price"`
-	Recommend       bool                `bson:"recommend"`
-	Star            float32             `bson:"star"`
-	OrderState      int                 `bson:"orderState"`
-	OrderCount      int                 `bson:"orderCount"`
-	OrderDailyLimit int                 `bson:"orderDailyLimit"`
-	ReorderCount    int                 `bson:"reorderCount"`
-	Use             bool                `bson:"use"`
-	CreateAt        time.Time           `bson:"createAt"`
-	ModifyAt        time.Time           `bson:"modifyAt"`
+	Category        string              `json:"category" bson:"category"`
+	Name            string              `json:"name" bson:"name"`
+	Price           int                 `json:"price" bson:"price"`
+	Recommend       bool                `json:"recommend" bson:"recommend"`
+	Star            float32             `json:"star" bson:"star"`
+	OrderState      int                 `json:"orderState" bson:"orderState"`
+	OrderCount      int                 `json:"orderCount" bson:"orderCount"`
+	OrderDailyLimit int                 `json:"orderDailyLimit" bson:"orderDailyLimit"`
+	ReorderCount    int                 `json:"reorderCount" bson:"reorderCount"`
+	Use             bool                `json:"use" bson:"use"`
+	CreateAt        time.Time           `json:"createAt" bson:"createAt"`
+	ModifyAt        time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 
 func NewModel(cfg *conf.Config) (*Model, error) {
