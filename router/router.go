@@ -68,7 +68,7 @@ func (p *Router) Idx() *gin.Engine {
 		owner.GET("/menu", p.ct.GetOK) // 임시로 GetOk로 연결
 		owner.POST("/menu", p.ct.InsertMenuControl)
 		owner.PUT("/menu", p.ct.UpdateMenuControl)
-		owner.DELETE("/menu", p.ct.GetOK)
+		owner.DELETE("/menu", p.ct.DeleteMenuControl)
 	}
 
 	customer := e.Group("customer", liteAuth())

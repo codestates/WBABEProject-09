@@ -2,6 +2,7 @@ package model
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -177,6 +178,32 @@ func (p *Model) UpdateMenuModel(menuId string, menuData Menu) error {
 	fmt.Println(res)
 	if err != nil {
 		log.Error("메뉴 수정 에러", err.Error())
+	}
+
+	return err
+}
+
+func (p *Model) DeleteMenuModel(menuId string) error {
+
+	var oldMenu Menu
+	objectId, _ := primitive.ObjectIDFromHex(menuId)
+	findFilter := bson.M{"_id": objectId}
+	if err := p.menuCol.FindOne(context.TODO(), findFilter).Decode(&oldMenu); err != nil {
+		log.Error("메뉴 조회 에러", err)
+		return err
+	}
+
+	if oldMenu.Use == false {
+		log.Info("이미 삭제된 메뉴")
+		return errors.New("이미 삭제된 메뉴")
+	}
+
+	filter := bson.M{"_id": objectId}
+	delete := bson.D{{"$set", bson.D{{"use", false}}}}
+	res, err := p.menuCol.UpdateOne(context.TODO(), filter, delete)
+	fmt.Println(res)
+	if err != nil {
+		log.Error("메뉴 삭제 에러", err)
 	}
 
 	return err
