@@ -69,11 +69,24 @@ func (p *Router) Idx() *gin.Engine {
 		owner.POST("/menu", p.ct.InsertMenuControl)
 		owner.PUT("/menu", p.ct.UpdateMenuControl)
 		owner.DELETE("/menu", p.ct.DeleteMenuControl)
+
+		owner.GET("/order", p.ct.GetOK) // 오더 상태 확인
+		owner.PUT("/order", p.ct.GetOK) // 오더 상태 수정
 	}
 
 	customer := e.Group("customer", liteAuth())
 	{
 		customer.GET("/menu", p.ct.GetOK)
+		customer.GET("/menu/detail", p.ct.GetOK) // 개별 메뉴에 대한 평점 및 리뷰 데이터 확인
+
+		customer.GET("/order", p.ct.GetOK)  // 자신이 주문한 order 확인
+		customer.POST("/order", p.ct.GetOK) // order 주문
+		customer.PUT("/order", p.ct.GetOK)  // 자신이 주문한 order 정보 변경, 삭제 대신 취소 상태로 대신함
+
+		customer.GET("/order/review", p.ct.GetOK)    // 자신이 주문한 order에 대한 리뷰 확인
+		customer.POST("/order/review", p.ct.GetOK)   // 자신이 주문한 order에 대한 리뷰 추가
+		customer.PUT("/order/review", p.ct.GetOK)    // 자신이 주문한 order에 대한 리뷰 수정
+		customer.DELETE("/order/review", p.ct.GetOK) // 자신이 주문한 order에 대한 리뷰 삭제
 	}
 
 	return e
