@@ -242,3 +242,39 @@ func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 	c.JSON(200, gin.H{"msg": "오더 추가 완료", "오더번호: ": orderNumber})
 	return
 }
+
+// UpdateCustomerOrderControl godoc
+//
+//	@Summary		call UpdateCustomerOrderControl, return result by json.
+//	@Description	주문자의 order data 수정을 위한 기능.
+//	@name			UpdateCustomerOrderControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Param			menu	body	model.Order	true	"{userId, orderDate, orderID , menu[{menuID, name}], phone, address}"
+//	@Router			/customer/order [put]
+//	@Success		200	{object}	controller
+func (p *Controller) UpdateCustomerOrderControl(c *gin.Context) {
+
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+
+	if !p.UserValidation(c, ut.TypeCustomer, userId) {
+		return
+	}
+
+	order := model.Order{}
+	if !p.OrderBind(c, &order) {
+		return
+	}
+	order.UserId = userId
+
+	if err := p.md.UpdateCustomerOrderModel(order); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "오더를 수정하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, gin.H{"msg": "ok"})
+	return
+}

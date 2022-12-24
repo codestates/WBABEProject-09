@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	ot "WBABEProject-09/type/order"
@@ -176,6 +177,32 @@ func (p *Model) GetOrderId(day string) (int, error) {
 	return JSONData.Seq, err
 }
 
+// order 수정시 메뉴를 비교하기 위한 기능
+//
+// 0: 같음, 1: 변경, 2: 추가
+func CompareMenu(oldOrder []OrderMenu, newOrder []OrderMenu) (map[int]string, int) {
+	menuMap := make(map[int]string)
+	for _, menuData := range oldOrder {
+		menuMap[menuData.MenuId] = "old"
+	}
+	for _, menuData := range newOrder {
+		if menuMap[menuData.MenuId] == "old" {
+			menuMap[menuData.MenuId] = "same"
+		} else {
+			menuMap[menuData.MenuId] = "new"
+		}
+	}
+
+	compareResult := 0
+	for _, compareType := range menuMap {
+		if compareType == "old" {
+			return menuMap, 1
+		} else if compareType == "new" {
+			compareResult = 2
+		}
+	}
+	return menuMap, compareResult
+}
 func (p *Model) GetUserTypeByIdModel(userId int) (*User, error) {
 
 	var user User
@@ -339,4 +366,54 @@ func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
 		return nil, err
 	}
 	return &newOrder, err
+}
+
+func (p *Model) UpdateCustomerOrderModel(orderData Order) error {
+
+	var oldOrder Order
+	findFilter := bson.M{"userId": orderData.UserId, "orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
+	if err := p.orderCol.FindOne(context.TODO(), findFilter).Decode(&oldOrder); err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return err
+	}
+
+	// -TODO- 리턴된 비교map을 활용해 취소된 메뉴와 추가된 메뉴에 대한 menu count 증가 로직이 필요
+	// 시간 배분을 고려해 나중에 작업
+	_, compareResult := CompareMenu(oldOrder.Menu, orderData.Menu)
+
+	// 배달중 이상의 상태에서는 오더 추가가 불가능
+	if compareResult == 2 && orderData.State >= ot.StateInDelivery {
+		log.Error("오더 상태 변경 에러")
+		errorMsg := fmt.Sprintf("오더를 추가할 수 없습니다. 현재상태: %s", ot.GetOrderStateText(orderData.State))
+		return errors.New(errorMsg)
+	} else if compareResult == 1 && orderData.State >= ot.StateCooking {
+		// 조리중 이상의 상태에서는 오더 변경이 불가능
+		log.Error("오더 상태 변경 에러")
+		errorMsg := fmt.Sprintf("오더를 변경할 수 없습니다. 현재상태: %s", ot.GetOrderStateText(orderData.State))
+		return errors.New(errorMsg)
+
+	}
+
+	updateTarget := bson.D{}
+	switch {
+	case orderData.Phone != oldOrder.Phone:
+		updateTarget = append(updateTarget, bson.E{"phone", orderData.Phone})
+		fallthrough
+	case orderData.Address != oldOrder.Address:
+		updateTarget = append(updateTarget, bson.E{"address", orderData.Address})
+		fallthrough
+	case compareResult != 0:
+		updateTarget = append(updateTarget, bson.E{"menu", orderData.Menu})
+		fallthrough
+	default:
+		updateTarget = append(updateTarget, bson.E{"modifyAt", time.Now()})
+	}
+
+	updateFilter := bson.M{"userId": orderData.UserId, "orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
+	update := bson.D{{"$set", updateTarget}}
+	_, err := p.orderCol.UpdateOne(context.TODO(), updateFilter, update)
+	if err != nil {
+		log.Error("오더 수정 에러", err.Error())
+	}
+	return nil
 }
