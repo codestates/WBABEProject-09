@@ -27,6 +27,7 @@ type Model struct {
 
 type User struct {
 	Id       *primitive.ObjectID `bson:"_id,omitempty"`
+	UserId   int                 `json:"userId" bson:"userId"`
 	Name     string              `json:"name" bson:"name"`
 	Email    string              `json:"email" bson:"email"`
 	Phone    string              `json:"phone" bson:"phone"`
@@ -49,7 +50,8 @@ type Order struct {
 	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 type OrderMenu struct {
-	id string `json:"name" bson:"name"`
+	MenuId int `json:"menuId" bson:"menuId"`
+	Name   int `json:"name" bson:"name"`
 }
 
 type Review struct {
@@ -139,11 +141,10 @@ func (p *Model) GetAutoId(idType string) (int, error) {
 	return JSONData.Seq, err
 }
 
-func (p *Model) GetUserTypeByIdModel(userId string) (*User, error) {
+func (p *Model) GetUserTypeByIdModel(userId int) (*User, error) {
 
 	var user User
-	objectId, _ := primitive.ObjectIDFromHex(userId)
-	filter := bson.M{"_id": objectId}
+	filter := bson.M{"userId": userId}
 	project := bson.M{"type": 1}
 	opts := options.FindOne().SetProjection(project)
 	err := p.userCol.FindOne(context.TODO(), filter, opts).Decode(&user)
@@ -174,11 +175,10 @@ func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
 	return &newMenu, err
 }
 
-func (p *Model) UpdateMenuModel(menuId string, menuData Menu) error {
+func (p *Model) UpdateMenuModel(menuId int, menuData Menu) error {
 
 	var oldMenu Menu
-	objectId, _ := primitive.ObjectIDFromHex(menuId)
-	findFilter := bson.M{"_id": objectId}
+	findFilter := bson.M{"menuId": menuId}
 	if err := p.menuCol.FindOne(context.TODO(), findFilter).Decode(&oldMenu); err != nil {
 		log.Error("메뉴 조회 에러", err.Error())
 		return err
@@ -208,7 +208,7 @@ func (p *Model) UpdateMenuModel(menuId string, menuData Menu) error {
 		updateTarget = append(updateTarget, bson.E{"modifyAt", time.Now()})
 	}
 
-	updateFilter := bson.M{"_id": objectId}
+	updateFilter := bson.M{"menuId": menuId}
 	update := bson.D{{"$set", updateTarget}}
 	res, err := p.menuCol.UpdateOne(context.TODO(), updateFilter, update)
 	fmt.Println(res)
@@ -219,11 +219,10 @@ func (p *Model) UpdateMenuModel(menuId string, menuData Menu) error {
 	return err
 }
 
-func (p *Model) DeleteMenuModel(menuId string) error {
+func (p *Model) DeleteMenuModel(menuId int) error {
 
 	var oldMenu Menu
-	objectId, _ := primitive.ObjectIDFromHex(menuId)
-	findFilter := bson.M{"_id": objectId}
+	findFilter := bson.M{"menuId": menuId}
 	if err := p.menuCol.FindOne(context.TODO(), findFilter).Decode(&oldMenu); err != nil {
 		log.Error("메뉴 조회 에러", err)
 		return err
@@ -234,7 +233,7 @@ func (p *Model) DeleteMenuModel(menuId string) error {
 		return errors.New("이미 삭제된 메뉴")
 	}
 
-	filter := bson.M{"_id": objectId}
+	filter := bson.M{"menuId": menuId}
 	delete := bson.D{{"$set", bson.D{{"use", false}}}}
 	res, err := p.menuCol.UpdateOne(context.TODO(), filter, delete)
 	fmt.Println(res)

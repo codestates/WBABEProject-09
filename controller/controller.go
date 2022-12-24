@@ -4,6 +4,7 @@ import (
 	"WBABEProject-09/model"
 	ut "WBABEProject-09/type/user"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +22,7 @@ func (p *Controller) GetOK(c *gin.Context) {
 	c.JSON(200, gin.H{"msg": "ok"})
 	return
 }
-func (p *Controller) CheckUser(userId string) (int, error) {
+func (p *Controller) CheckUser(userId int) (int, error) {
 	user, err := p.md.GetUserTypeByIdModel(userId)
 	if err != nil {
 		return 0, err
@@ -30,9 +31,9 @@ func (p *Controller) CheckUser(userId string) (int, error) {
 }
 
 // user ID 및 Type에대한 유효성 검사를 공통적으로 수행하기 위해 선언
-func (p *Controller) UserValidation(c *gin.Context, targetUserType int, userId string) bool {
+func (p *Controller) UserValidation(c *gin.Context, targetUserType int, userId int) bool {
 
-	if userId == "" {
+	if userId == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "user ID가 유효하지 않습니다",
 		})
@@ -57,8 +58,8 @@ func (p *Controller) UserValidation(c *gin.Context, targetUserType int, userId s
 }
 
 // menu ID에 대한 유효성 검사를 공통적으로 수행하기 위해 선언
-func (p *Controller) MenuValidation(c *gin.Context, menuId string) bool {
-	if menuId == "" {
+func (p *Controller) MenuValidation(c *gin.Context, menuId int) bool {
+	if menuId == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "menu ID가 유효하지 않습니다",
 		})
@@ -94,7 +95,7 @@ func (p *Controller) MenuBind(c *gin.Context, menu *model.Menu) bool {
 //	@Success		200	{object}	model.Menu
 func (p *Controller) InsertMenuControl(c *gin.Context) {
 
-	userId := c.GetHeader("userId")
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
 	if !p.UserValidation(c, ut.TypeOwner, userId) {
 		return
 	}
@@ -130,8 +131,8 @@ func (p *Controller) InsertMenuControl(c *gin.Context) {
 //	@Success		200	{object}
 func (p *Controller) UpdateMenuControl(c *gin.Context) {
 
-	userId := c.GetHeader("userId")
-	menuId := c.GetHeader("menuId")
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+	menuId, _ := strconv.Atoi(c.GetHeader("menuId"))
 
 	if !p.UserValidation(c, ut.TypeOwner, userId) {
 		return
@@ -169,8 +170,8 @@ func (p *Controller) UpdateMenuControl(c *gin.Context) {
 //	@Success		200	{object}	controller
 func (p *Controller) DeleteMenuControl(c *gin.Context) {
 
-	userId := c.GetHeader("userId")
-	menuId := c.GetHeader("menuId")
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+	menuId, _ := strconv.Atoi(c.GetHeader("menuId"))
 
 	if !p.UserValidation(c, ut.TypeOwner, userId) {
 		return
@@ -186,6 +187,23 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 		})
 		return
 	}
+	c.JSON(200, gin.H{"msg": "ok"})
+	return
+}
+
+// InsertCustomerOrderControl godoc
+//
+//	@Summary		call InsertCustomerOrderControl, return order data by model.Order.
+//	@Description	order data 추가을 위한 기능.
+//	@name			InsertCustomerOrderControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Param			menu	body	model.Menu	true	"{category, name, price, recommend, orderState, orderDailyLimit}"
+//	@Router			/customer/order [post]
+//	@Success		200	{object}	controller
+func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
+
 	c.JSON(200, gin.H{"msg": "ok"})
 	return
 }
