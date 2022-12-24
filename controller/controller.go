@@ -94,6 +94,17 @@ func (p *Controller) OrderBind(c *gin.Context, order *model.Order) bool {
 	}
 	return true
 }
+func (p *Controller) ReviewBind(c *gin.Context, review *model.Review) bool {
+
+	if err := c.ShouldBindJSON(&review); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "리뷰 정보가 잘못됬습니다!",
+			"error":   err.Error(),
+		})
+		return false
+	}
+	return true
+}
 
 // InsertMenuControl godoc
 //
@@ -312,5 +323,43 @@ func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"msg": "ok"})
+	return
+}
+
+// InsertReviewControl godoc
+//
+//	@Summary		call InsertReviewControl, return result by json.
+//	@Description	review data 추가을 위한 기능.
+//	@name			InsertReviewControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Param			menu	body	model.Review	true	"{orderDay, orderId, star, content}"
+//	@Router			/customer/order/review [post]
+//	@Success		200	{object}	model.Review
+func (p *Controller) InsertReviewControl(c *gin.Context) {
+
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+
+	if !p.UserValidation(c, ut.TypeCustomer, userId) {
+		return
+	}
+
+	NewReview := model.NewReview()
+	if !p.ReviewBind(c, &NewReview) {
+		return
+	}
+	NewReview.UserId = userId
+
+	reviewResult, err := p.md.InsertReviewModel(NewReview)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "리뷰를 추가하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, reviewResult)
 	return
 }

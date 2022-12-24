@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	ot "WBABEProject-09/type/order"
@@ -24,6 +25,7 @@ type Model struct {
 	orderSaveCol  *mongo.Collection
 	menuCol       *mongo.Collection
 	reviewCol     *mongo.Collection
+	reviewSaveCol *mongo.Collection
 	idSeq         *mongo.Collection
 	orderCountSeq *mongo.Collection
 }
@@ -50,7 +52,6 @@ type Order struct {
 	Phone    string              `json:"phone" bson:"phone"`
 	Address  string              `json:"address" bson:"address"`
 	State    int                 `json:"state" bson:"state"`
-	Review   Review              `json:"review" bson:"review"`
 	CreateAt time.Time           `json:"createAt" bson:"createAt"`
 	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
@@ -60,11 +61,14 @@ type OrderMenu struct {
 }
 
 type Review struct {
-	Star     float32   `json:"star" bson:"star"`
-	Content  string    `json:"content" bson:"content"`
-	Use      bool      `json:"use" bson:"use"`
-	CreateAt time.Time `json:"createAt" bson:"createAt"`
-	ModifyAt time.Time `json:"modifyAt" bson:"modifyAt"`
+	Id       *primitive.ObjectID `bson:"_id,omitempty"`
+	UserId   int                 `json:"userId" bson:"userId"`
+	OrderDay string              `json:"orderDay" bson:"orderDay"`
+	OrderId  int                 `json:"orderId" bson:"orderId"`
+	Star     float32             `json:"star" bson:"star"`
+	Content  string              `json:"content" bson:"content"`
+	CreateAt time.Time           `json:"createAt" bson:"createAt"`
+	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 
 type Menu struct {
@@ -99,6 +103,7 @@ func NewModel(cfg *conf.Config) (*Model, error) {
 		r.orderSaveCol = db.Collection(cfg.DB.OrderSaveCollection)
 		r.menuCol = db.Collection(cfg.DB.MenuCollection)
 		r.reviewCol = db.Collection(cfg.DB.ReviewCollection)
+		r.reviewSaveCol = db.Collection(cfg.DB.ReviewSaveCollection)
 		r.idSeq = db.Collection(cfg.DB.IdSequence)
 		r.orderCountSeq = db.Collection(cfg.DB.OrderCountSequence)
 	}
@@ -120,6 +125,13 @@ func NewMenu() Menu {
 func NewOrder() Order {
 	return Order{
 		State:    ot.StateReceiving,
+		CreateAt: time.Now(),
+		ModifyAt: time.Now(),
+	}
+}
+
+func NewReview() Review {
+	return Review{
 		CreateAt: time.Now(),
 		ModifyAt: time.Now(),
 	}
@@ -221,6 +233,107 @@ func (p *Model) GetUserTypeByIdModel(userId int) (*User, error) {
 	return &user, nil
 }
 
+// 오더 주문시 연계된 메뉴들에 대해서 재주문, 주문Count를 처리하기 위한 기능
+//
+// 트랜잭션 고려는 안되어있음
+// 초기 Aggregate count 방식으로 설계되었으나 성능 낭비에 데이터 변환 로직이 복잡해 폐기
+func (p *Model) CheckOrderMenuModel(orderData *Order) error {
+
+	for _, orderMenuData := range orderData.Menu {
+
+		filter := bson.M{"menuId": orderMenuData.MenuId}
+		updateTarget := bson.D{}
+
+		// 주문자가 일치하고 배달 완료로 오더가 완료된 메뉴를 대상으로 집계
+		matchState := bson.D{
+			{"userId", orderData.UserId},
+			{"menu", bson.D{{"$elemMatch", bson.D{{"menuId", orderMenuData.MenuId}}}}},
+			{"state", 7},
+		}
+
+		findOpt := options.FindOne()
+		var findResult bson.M
+		// 배달 완료로 별도에 orderSave 콜렉션에 저장된 과거 주문 내역을 참조
+		findErr := p.orderSaveCol.FindOne(context.TODO(), matchState, findOpt).Decode(&findResult)
+		if findErr == nil {
+			updateTarget = append(updateTarget, bson.E{"reorderCount", 1})
+		}
+		updateTarget = append(updateTarget, bson.E{"orderCount", 1})
+		update := bson.D{{"$inc", updateTarget}}
+		result := p.menuCol.FindOneAndUpdate(context.TODO(), filter, update)
+		err := result.Err()
+		if err != nil {
+			log.Error(err.Error())
+		}
+
+	}
+	return nil
+}
+
+// 리뷰 추가시 연계된 메뉴들에 대해서 계산해 업데이트 위한 함수
+func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
+
+	// 초기 구상은 3개 테이블을 Join하는 방식이었지만, 복잡도와 성능 문제로 폐기
+	// 완료된 order와 review를 연결하고 menu ID를 기준으로 포함되는 order 정보로 평균을 내는 방식
+	// ERD 구성 및 설계단계부터 잘못된 느낌
+	for _, orderMenuData := range orderData.Menu {
+		pipeline := mongo.Pipeline{
+			{
+				{"$lookup", bson.D{
+					{"from", "tReview"},
+					{"let",
+						bson.M{"order_day": "$orderDay", "order_id": "$orderId"},
+					},
+					{"pipeline", bson.A{bson.D{
+						{"$match", bson.D{
+							{"$expr", bson.D{
+								{"$and", []interface{}{
+									bson.M{"$eq": []string{"$orderDay", "$$order_day"}},
+									bson.M{"$eq": []string{"$orderId", "$$order_id"}},
+								}},
+							}},
+						}},
+					}}},
+					{"as", "orderReview"},
+				}},
+			},
+			{{"$unwind", bson.D{{"path", "$orderReview"}}}},
+
+			{{"$match", bson.D{{"state", 7}, {"menu.menuId", orderMenuData.MenuId}}}},
+			{{"$group", bson.D{
+				{"_id", orderMenuData.MenuId},
+				{"avgStar", bson.M{"$avg": "$orderReview.star"}},
+			},
+			}},
+		}
+		cursor, _ := p.orderSaveCol.Aggregate(context.TODO(), pipeline)
+		if cursor.TryNext(context.TODO()) {
+
+			// aggregate 결과물에서 avg를 추출하는 과정
+			// 더 좋은 구조가 있을꺼 같지만, 시간이 너무 소요되서 일단 동작하니 pass
+			type avgResult struct {
+				AvgStar float64 `bson:"avgStar"`
+			}
+
+			bsonResult := avgResult{}
+			cursor.Decode(&bsonResult)
+
+			updateStar := math.Round(bsonResult.AvgStar*10) / 10
+			if updateStar != 0 {
+
+				updateFilter := bson.M{"menuId": orderMenuData.MenuId}
+				update := bson.D{{"$set", bson.D{{"star", updateStar}}}}
+				_, err := p.menuCol.UpdateOne(context.TODO(), updateFilter, update)
+				if err != nil {
+					log.Error("메뉴 star 수정 에러", err.Error())
+				}
+			}
+
+		}
+	}
+	return nil
+}
+
 func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
 	menuId, err := p.GetAutoId("menuId")
 	menuData.MenuId = menuId
@@ -305,43 +418,6 @@ func (p *Model) DeleteMenuModel(menuId int) error {
 	}
 
 	return err
-}
-
-// 오더 주문시 연계된 메뉴들에 대해서 재주문, 주문Count를 처리하기 위한 기능
-//
-// 트랜잭션 고려는 안되어있음
-// 초기 Aggregate count 방식으로 설계되었으나 성능 낭비에 데이터 변환 로직이 복잡해 폐기
-func (p *Model) CheckOrderMenuModel(orderData *Order) error {
-
-	for _, orderMenuData := range orderData.Menu {
-
-		filter := bson.M{"menuId": orderMenuData.MenuId}
-		updateTarget := bson.D{}
-
-		// 주문자가 일치하고 배달 완료로 오더가 완료된 메뉴를 대상으로 집계
-		matchState := bson.D{
-			{"userId", orderData.UserId},
-			{"menu", bson.D{{"$elemMatch", bson.D{{"menuId", orderMenuData.MenuId}}}}},
-			{"state", 7},
-		}
-
-		findOpt := options.FindOne()
-		var findResult bson.M
-		// 배달 완료로 별도에 orderSave 콜렉션에 저장된 과거 주문 내역을 참조
-		findErr := p.orderSaveCol.FindOne(context.TODO(), matchState, findOpt).Decode(&findResult)
-		if findErr == nil {
-			updateTarget = append(updateTarget, bson.E{"reorderCount", 1})
-		}
-		updateTarget = append(updateTarget, bson.E{"orderCount", 1})
-		update := bson.D{{"$inc", updateTarget}}
-		result := p.menuCol.FindOneAndUpdate(context.TODO(), filter, update)
-		err := result.Err()
-		if err != nil {
-			log.Error(err.Error())
-		}
-
-	}
-	return nil
 }
 
 func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
@@ -465,4 +541,42 @@ func (p *Model) UpdateOwnerOrderModel(orderData Order) error {
 		log.Error("오더 상태 수정 에러", err.Error())
 	}
 	return nil
+}
+
+func (p *Model) InsertReviewModel(reviewData Review) (*Review, error) {
+
+	var targetOrder Order
+	orderFindFilter := bson.M{"userId": reviewData.UserId, "orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "state": 7}
+	if err := p.orderSaveCol.FindOne(context.TODO(), orderFindFilter).Decode(&targetOrder); err != nil {
+		log.Error("리뷰 타겟 오더 조회 에러", err.Error())
+		return nil, err
+	}
+	var oldReview Review
+	reviewFindFilter := bson.M{"userId": reviewData.UserId, "orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId}
+	if err := p.reviewCol.FindOne(context.TODO(), reviewFindFilter).Decode(&oldReview); err == nil {
+		log.Error("리뷰 저장 에러: 이미 리뷰가 존재")
+		return nil, errors.New("이미 리뷰가 존재함")
+	}
+
+	res, err := p.reviewCol.InsertOne(context.TODO(), reviewData)
+
+	if err != nil {
+		log.Error("리뷰 추가 에러", err.Error())
+		return nil, err
+	}
+
+	_, err = p.reviewSaveCol.InsertOne(context.TODO(), reviewData)
+
+	if err != nil {
+		log.Error("초기 리뷰 저장 에러", err.Error())
+	}
+	err = p.UpdateMenuReviewStarModel(&targetOrder)
+
+	var newReview Review
+	query := bson.M{"_id": res.InsertedID}
+	if err = p.reviewCol.FindOne(context.TODO(), query).Decode(&newReview); err != nil {
+		log.Error("리뷰 추가 후 조회 에러", err.Error())
+		return nil, err
+	}
+	return &newReview, err
 }

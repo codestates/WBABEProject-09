@@ -10,6 +10,7 @@ orderCollection = "tOrder"
 orderSaveCollection = "tOrderSave"
 menuCollection = "tMenu"
 reviewCollection = "tReview"
+reviewSaveCollection = "tReviewSave"
 idSequence = "sID"
 orderCountSequence = "sOrderCount"
 
