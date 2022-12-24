@@ -16,11 +16,13 @@ import (
 )
 
 type Model struct {
-	client    *mongo.Client
-	userCol   *mongo.Collection
-	orderCol  *mongo.Collection
-	menuCol   *mongo.Collection
-	reviewCol *mongo.Collection
+	client        *mongo.Client
+	userCol       *mongo.Collection
+	orderCol      *mongo.Collection
+	menuCol       *mongo.Collection
+	reviewCol     *mongo.Collection
+	idSeq         *mongo.Collection
+	orderCountSeq *mongo.Collection
 }
 
 type User struct {
@@ -60,6 +62,7 @@ type Review struct {
 
 type Menu struct {
 	Id              *primitive.ObjectID `bson:"_id,omitempty"`
+	MenuId          int                 `json:"menuId" bson:"menuId"`
 	Category        string              `json:"category" bson:"category"`
 	Name            string              `json:"name" bson:"name"`
 	Price           int                 `json:"price" bson:"price"`
@@ -88,6 +91,8 @@ func NewModel(cfg *conf.Config) (*Model, error) {
 		r.orderCol = db.Collection(cfg.DB.OrderCollection)
 		r.menuCol = db.Collection(cfg.DB.MenuCollection)
 		r.reviewCol = db.Collection(cfg.DB.ReviewCollection)
+		r.idSeq = db.Collection(cfg.DB.IdSequence)
+		r.orderCountSeq = db.Collection(cfg.DB.OrderCountSequence)
 	}
 
 	return r, nil
@@ -104,6 +109,36 @@ func NewMenu() Menu {
 		ModifyAt:     time.Now(),
 	}
 }
+
+// auto-increment ID를 활용하기 위해 만든 시퀀스
+/*
+단 조회 순간 바로 update해버리기 때문에 추후에 트랜잭션 등을 통해서 고려가 필요해보임.
+조회 후 사용안한다고 해도 버그가 있는건 아니니 보류
+*/
+func (p *Model) GetAutoId(idType string) (int, error) {
+
+	filter := bson.M{"_id": idType}
+	update := bson.D{{"$inc", bson.D{{"seq", 1}}}}
+	upsert := true
+	after := options.After
+	opt := options.FindOneAndUpdateOptions{
+		ReturnDocument: &after,
+		Upsert:         &upsert,
+	}
+
+	JSONData := struct {
+		Seq int `json:"seq" bson:"seq"`
+	}{}
+
+	err := p.idSeq.FindOneAndUpdate(context.TODO(), filter, update, &opt).Decode(&JSONData)
+
+	if err != nil {
+		log.Error("Decode error: ", err)
+		return 0, err
+	}
+	return JSONData.Seq, err
+}
+
 func (p *Model) GetUserTypeByIdModel(userId string) (*User, error) {
 
 	var user User
@@ -122,7 +157,8 @@ func (p *Model) GetUserTypeByIdModel(userId string) (*User, error) {
 }
 
 func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
-
+	menuId, err := p.GetAutoId("menuId")
+	menuData.MenuId = menuId
 	res, err := p.menuCol.InsertOne(context.TODO(), menuData)
 
 	if err != nil {

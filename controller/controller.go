@@ -118,7 +118,7 @@ func (p *Controller) InsertMenuControl(c *gin.Context) {
 
 // UpdateMenuControl godoc
 //
-//	@Summary		call UpdateMenuControl, return menu data by model.Menu.
+//	@Summary		call UpdateMenuControl, return result by json.
 //	@Description	menu data 수정을 위한 기능.
 //	@name			UpdateMenuControl
 //	@Accept			json
@@ -158,8 +158,8 @@ func (p *Controller) UpdateMenuControl(c *gin.Context) {
 
 // DeleteMenuControl godoc
 //
-//	@Summary		call DeleteMenuControl, return menu data by model.Menu.
-//	@Description	menu data 수정을 위한 기능.
+//	@Summary		call DeleteMenuControl, return result by json.
+//	@Description	menu data 삭제을 위한 기능.
 //	@name			DeleteMenuControl
 //	@Accept			json
 //	@Produce		json

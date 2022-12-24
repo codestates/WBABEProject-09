@@ -9,6 +9,8 @@ userCollection = "tUser"
 orderCollection = "tOrder"
 menuCollection = "tMenu"
 reviewCollection = "tReview"
+idSequence = "sID"
+orderCountSequence = "sOrderCount"
 
 
 [log]
