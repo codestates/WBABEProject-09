@@ -429,3 +429,40 @@ func (p *Model) UpdateCustomerOrderModel(orderData Order) error {
 	}
 	return nil
 }
+
+func (p *Model) UpdateOwnerOrderModel(orderData Order) error {
+
+	var oldOrder Order
+	findFilter := bson.M{"orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
+	if err := p.orderCol.FindOne(context.TODO(), findFilter).Decode(&oldOrder); err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return err
+	}
+	switch {
+	// 취소 또는 배달 완료의 경우 기존 Order 콜렉션에서 제거 후 Save로 이동
+	case orderData.State == 3 || orderData.State == 7:
+		oldOrder.State = orderData.State
+
+		if _, err := p.orderSaveCol.InsertOne(context.TODO(), oldOrder); err != nil {
+			log.Error("오더 저장 에러", err.Error())
+			return err
+		}
+		if _, err := p.orderCol.DeleteOne(context.TODO(), findFilter); err != nil {
+			log.Error("오더 백업 에러", err.Error())
+			return err
+		}
+		return nil
+	case orderData.State == 1:
+		// 오더를 접수중으로 변경할수는 없음
+		log.Error("오더 상태 변경 에러!")
+		return errors.New("접수중으로 변경할 순 없습니다!")
+	}
+
+	updateFilter := bson.M{"orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
+	update := bson.D{{"$set", bson.D{{"state", orderData.State}}}}
+	_, err := p.orderCol.UpdateOne(context.TODO(), updateFilter, update)
+	if err != nil {
+		log.Error("오더 상태 수정 에러", err.Error())
+	}
+	return nil
+}

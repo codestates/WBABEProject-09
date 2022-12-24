@@ -70,8 +70,8 @@ func (p *Router) Idx() *gin.Engine {
 		owner.PUT("/menu", p.ct.UpdateMenuControl)
 		owner.DELETE("/menu", p.ct.DeleteMenuControl)
 
-		owner.GET("/order", p.ct.GetOK) // 오더 상태 확인
-		owner.PUT("/order", p.ct.GetOK) // 오더 상태 수정
+		owner.GET("/order", p.ct.GetOK)                   // 오더 상태 확인
+		owner.PUT("/order", p.ct.UpdateOwnerOrderControl) // 오더 상태 수정
 	}
 
 	customer := e.Group("customer", liteAuth())

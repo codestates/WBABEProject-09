@@ -278,3 +278,39 @@ func (p *Controller) UpdateCustomerOrderControl(c *gin.Context) {
 	c.JSON(200, gin.H{"msg": "ok"})
 	return
 }
+
+// UpdateOwnerOrderControl godoc
+//
+//	@Summary		call UpdateOwnerOrderControl, return result by json.
+//	@Description	오너가 order state 수정을 위한 기능.
+//	@name			UpdateOwnerOrderControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Param			menu	body	model.Order	true	"{orderDate, orderID , state}"
+//	@Router			/owner/order [put]
+//	@Success		200	{object}	controller
+func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
+
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+
+	if !p.UserValidation(c, ut.TypeOwner, userId) {
+		return
+	}
+
+	order := model.Order{}
+	if !p.OrderBind(c, &order) {
+		return
+	}
+	order.UserId = userId
+
+	if err := p.md.UpdateOwnerOrderModel(order); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "오더 상태를 수정하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, gin.H{"msg": "ok"})
+	return
+}
