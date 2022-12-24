@@ -21,6 +21,7 @@ type Model struct {
 	client        *mongo.Client
 	userCol       *mongo.Collection
 	orderCol      *mongo.Collection
+	orderSaveCol  *mongo.Collection
 	menuCol       *mongo.Collection
 	reviewCol     *mongo.Collection
 	idSeq         *mongo.Collection
@@ -95,6 +96,7 @@ func NewModel(cfg *conf.Config) (*Model, error) {
 		db := r.client.Database(cfg.DB.DB)
 		r.userCol = db.Collection(cfg.DB.UserCollection)
 		r.orderCol = db.Collection(cfg.DB.OrderCollection)
+		r.orderSaveCol = db.Collection(cfg.DB.OrderSaveCollection)
 		r.menuCol = db.Collection(cfg.DB.MenuCollection)
 		r.reviewCol = db.Collection(cfg.DB.ReviewCollection)
 		r.idSeq = db.Collection(cfg.DB.IdSequence)
@@ -316,14 +318,17 @@ func (p *Model) CheckOrderMenuModel(orderData *Order) error {
 		filter := bson.M{"menuId": orderMenuData.MenuId}
 		updateTarget := bson.D{}
 
+		// 주문자가 일치하고 배달 완료로 오더가 완료된 메뉴를 대상으로 집계
 		matchState := bson.D{
 			{"userId", orderData.UserId},
-			{"menu", bson.D{{"$elemMatch", bson.D{{"menuId", orderMenuData.MenuId}}}}}}
+			{"menu", bson.D{{"$elemMatch", bson.D{{"menuId", orderMenuData.MenuId}}}}},
+			{"state", 7},
+		}
 
-		// 재주문 검증시 이미 현재 보낸 order 요청이 DB에 기록되어 있기에 1회 Skip 필요
-		findOpt := options.FindOne().SetSkip(1)
+		findOpt := options.FindOne()
 		var findResult bson.M
-		findErr := p.orderCol.FindOne(context.TODO(), matchState, findOpt).Decode(&findResult)
+		// 배달 완료로 별도에 orderSave 콜렉션에 저장된 과거 주문 내역을 참조
+		findErr := p.orderSaveCol.FindOne(context.TODO(), matchState, findOpt).Decode(&findResult)
 		if findErr == nil {
 			updateTarget = append(updateTarget, bson.E{"reorderCount", 1})
 		}
@@ -352,6 +357,13 @@ func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
 
 	if err != nil {
 		log.Error("오더 추가 에러", err.Error())
+		return &orderData, err
+	}
+
+	_, err = p.orderSaveCol.InsertOne(context.TODO(), orderData)
+
+	if err != nil {
+		log.Error("초기 오더 저장 에러", err.Error())
 	}
 	err = p.CheckOrderMenuModel(&orderData)
 

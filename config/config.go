@@ -14,14 +14,15 @@ type Config struct {
 	}
 
 	DB struct {
-		Host               string
-		DB                 string
-		UserCollection     string
-		OrderCollection    string
-		MenuCollection     string
-		ReviewCollection   string
-		IdSequence         string
-		OrderCountSequence string
+		Host                string
+		DB                  string
+		UserCollection      string
+		OrderCollection     string
+		OrderSaveCollection string
+		MenuCollection      string
+		ReviewCollection    string
+		IdSequence          string
+		OrderCountSequence  string
 	}
 
 	Log struct {
