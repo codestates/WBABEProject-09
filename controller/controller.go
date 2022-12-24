@@ -206,13 +206,13 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 
 // InsertCustomerOrderControl godoc
 //
-//	@Summary		call InsertCustomerOrderControl, return order data by model.Order.
+//	@Summary		call InsertCustomerOrderControl, return result by json.
 //	@Description	order data 추가을 위한 기능.
 //	@name			InsertCustomerOrderControl
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
-//	@Param			menu	body	model.Menu	true	"{category, name, price, recommend, orderState, orderDailyLimit}"
+//	@Param			menu	body	model.Order	true	"{userId, menu[{menuID, name}], phone, address}"
 //	@Router			/customer/order [post]
 //	@Success		200	{object}	controller
 func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
