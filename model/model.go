@@ -278,6 +278,40 @@ func (p *Model) DeleteMenuModel(menuId int) error {
 	return err
 }
 
+// 오더 주문시 연계된 메뉴들에 대해서 재주문, 주문Count를 처리하기 위한 기능
+//
+// 트랜잭션 고려는 안되어있음
+// 초기 Aggregate count 방식으로 설계되었으나 성능 낭비에 데이터 변환 로직이 복잡해 폐기
+func (p *Model) CheckOrderMenuModel(orderData *Order) error {
+
+	for _, orderMenuData := range orderData.Menu {
+
+		filter := bson.M{"menuId": orderMenuData.MenuId}
+		updateTarget := bson.D{}
+
+		matchState := bson.D{
+			{"userId", orderData.UserId},
+			{"menu", bson.D{{"$elemMatch", bson.D{{"menuId", orderMenuData.MenuId}}}}}}
+
+		// 재주문 검증시 이미 현재 보낸 order 요청이 DB에 기록되어 있기에 1회 Skip 필요
+		findOpt := options.FindOne().SetSkip(1)
+		var findResult bson.M
+		findErr := p.orderCol.FindOne(context.TODO(), matchState, findOpt).Decode(&findResult)
+		if findErr == nil {
+			updateTarget = append(updateTarget, bson.E{"reorderCount", 1})
+		}
+		updateTarget = append(updateTarget, bson.E{"orderCount", 1})
+		update := bson.D{{"$inc", updateTarget}}
+		result := p.menuCol.FindOneAndUpdate(context.TODO(), filter, update)
+		err := result.Err()
+		if err != nil {
+			log.Error(err.Error())
+		}
+
+	}
+	return nil
+}
+
 func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
 
 	now := time.Now().UTC()
@@ -291,6 +325,11 @@ func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
 
 	if err != nil {
 		log.Error("오더 추가 에러", err.Error())
+	}
+	err = p.CheckOrderMenuModel(&orderData)
+
+	if err != nil {
+		log.Error("오더 메뉴 정산 에러", err.Error())
 	}
 
 	var newOrder Order

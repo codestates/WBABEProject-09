@@ -227,6 +227,7 @@ func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 	if !p.OrderBind(c, &NewOrder) {
 		return
 	}
+	NewOrder.UserId = userId
 
 	orderResult, err := p.md.InsertOrderModel(NewOrder)
 
