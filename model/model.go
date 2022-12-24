@@ -3,8 +3,9 @@ package model
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
+
+	ot "WBABEProject-09/type/order"
 
 	conf "WBABEProject-09/config"
 	log "WBABEProject-09/logger"
@@ -40,7 +41,9 @@ type User struct {
 
 type Order struct {
 	Id       *primitive.ObjectID `bson:"_id,omitempty"`
-	User     string              `json:"user" bson:"user"`
+	UserId   int                 `json:"userId" bson:"userId"`
+	OrderDay string              `json:"orderDay" bson:"orderDay"`
+	OrderId  int                 `json:"orderId" bson:"orderId"`
 	Menu     []OrderMenu         `json:"menu" bson:"menu"`
 	Phone    string              `json:"phone" bson:"phone"`
 	Address  string              `json:"address" bson:"address"`
@@ -50,8 +53,8 @@ type Order struct {
 	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 type OrderMenu struct {
-	MenuId int `json:"menuId" bson:"menuId"`
-	Name   int `json:"name" bson:"name"`
+	MenuId int    `json:"menuId" bson:"menuId"`
+	Name   string `json:"name" bson:"name"`
 }
 
 type Review struct {
@@ -111,6 +114,13 @@ func NewMenu() Menu {
 		ModifyAt:     time.Now(),
 	}
 }
+func NewOrder() Order {
+	return Order{
+		State:    ot.StateReceiving,
+		CreateAt: time.Now(),
+		ModifyAt: time.Now(),
+	}
+}
 
 // auto-increment ID를 활용하기 위해 만든 시퀀스
 /*
@@ -133,6 +143,31 @@ func (p *Model) GetAutoId(idType string) (int, error) {
 	}{}
 
 	err := p.idSeq.FindOneAndUpdate(context.TODO(), filter, update, &opt).Decode(&JSONData)
+
+	if err != nil {
+		log.Error("Decode error: ", err)
+		return 0, err
+	}
+	return JSONData.Seq, err
+}
+
+// 일마다 별도의 auto-increment ID를 산정하기 위한 기능
+func (p *Model) GetOrderId(day string) (int, error) {
+
+	filter := bson.M{"_id": day}
+	update := bson.D{{"$inc", bson.D{{"seq", 1}}}}
+	upsert := true
+	after := options.After
+	opt := options.FindOneAndUpdateOptions{
+		ReturnDocument: &after,
+		Upsert:         &upsert,
+	}
+
+	JSONData := struct {
+		Seq int `json:"seq" bson:"seq"`
+	}{}
+
+	err := p.orderCountSeq.FindOneAndUpdate(context.TODO(), filter, update, &opt).Decode(&JSONData)
 
 	if err != nil {
 		log.Error("Decode error: ", err)
@@ -210,8 +245,7 @@ func (p *Model) UpdateMenuModel(menuId int, menuData Menu) error {
 
 	updateFilter := bson.M{"menuId": menuId}
 	update := bson.D{{"$set", updateTarget}}
-	res, err := p.menuCol.UpdateOne(context.TODO(), updateFilter, update)
-	fmt.Println(res)
+	_, err := p.menuCol.UpdateOne(context.TODO(), updateFilter, update)
 	if err != nil {
 		log.Error("메뉴 수정 에러", err.Error())
 	}
@@ -235,11 +269,35 @@ func (p *Model) DeleteMenuModel(menuId int) error {
 
 	filter := bson.M{"menuId": menuId}
 	delete := bson.D{{"$set", bson.D{{"use", false}}}}
-	res, err := p.menuCol.UpdateOne(context.TODO(), filter, delete)
-	fmt.Println(res)
+	_, err := p.menuCol.UpdateOne(context.TODO(), filter, delete)
+
 	if err != nil {
 		log.Error("메뉴 삭제 에러", err)
 	}
 
 	return err
+}
+
+func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
+
+	now := time.Now().UTC()
+	day := now.Format("2006-01-02")
+	orderId, err := p.GetOrderId(day)
+
+	orderData.OrderDay = day
+	orderData.OrderId = orderId
+
+	res, err := p.orderCol.InsertOne(context.TODO(), orderData)
+
+	if err != nil {
+		log.Error("오더 추가 에러", err.Error())
+	}
+
+	var newOrder Order
+	query := bson.M{"_id": res.InsertedID}
+	if err = p.orderCol.FindOne(context.TODO(), query).Decode(&newOrder); err != nil {
+		log.Error("오더 추가 후 조회 에러", err.Error())
+		return nil, err
+	}
+	return &newOrder, err
 }

@@ -3,6 +3,7 @@ package controller
 import (
 	"WBABEProject-09/model"
 	ut "WBABEProject-09/type/user"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -75,6 +76,18 @@ func (p *Controller) MenuBind(c *gin.Context, menu *model.Menu) bool {
 	if err := c.ShouldBindJSON(&menu); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "메뉴 정보가 잘못됬습니다!",
+			"error":   err.Error(),
+		})
+		return false
+	}
+	return true
+}
+
+func (p *Controller) OrderBind(c *gin.Context, order *model.Order) bool {
+
+	if err := c.ShouldBindJSON(&order); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "오더 정보가 잘못됬습니다!",
 			"error":   err.Error(),
 		})
 		return false
@@ -204,6 +217,27 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 //	@Success		200	{object}	controller
 func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 
-	c.JSON(200, gin.H{"msg": "ok"})
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+
+	if !p.UserValidation(c, ut.TypeCustomer, userId) {
+		return
+	}
+
+	NewOrder := model.NewOrder()
+	if !p.OrderBind(c, &NewOrder) {
+		return
+	}
+
+	orderResult, err := p.md.InsertOrderModel(NewOrder)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "오더를 추가하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	orderNumber := fmt.Sprintf("%s_%d", orderResult.OrderDay, orderResult.OrderId)
+	c.JSON(200, gin.H{"msg": "오더 추가 완료", "오더번호: ": orderNumber})
 	return
 }
