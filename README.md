@@ -12,23 +12,24 @@
 
 ![Go-order](https://user-images.githubusercontent.com/25821827/209467784-7131dc4c-2acc-43fd-9d8e-466469fe4a36.png)
 
-tUser: 유저 정보 collection
-tMenu: 메뉴 정보 collection
-tOrder: 오더 정보 collection
 
-- tOrder에 menu필드는 menuId와 name으로 이루어진 []Object으로 tMenu와 연결됨
-  tOrderSave: 초기 오더 정보 및 완료 오더 정보 저장 collection
-- 초기 insert 된 정보가 복사됨
-- order state가 3(취소), 7(배달완료) 된 경우 tOrder에서 tOrderSave로 이동
-
-tReview: 리뷰 정보 collection
-
-- tOrderSave에 state: 7(배달완료)인 document와 연결됨
-- orderDay와 orderId를 통해서 tOrderSave와 연결
-  tReviewSave: 초기 리뷰 및 리뷰 변경사항에 대해서 보관하기 위한 collection
-
-sID: 각 collection에 존재하는 id(objectId가 아님)를 생성하기 위한 시퀀스
+#### 컬렉션
+tUser: 유저 정보 collection  
+tMenu: 메뉴 정보 collection  
+tOrder: 오더 정보 collection  
+-   tOrder에 menu필드는 menuId와 name으로 이루어진 []Object으로 tMenu와 연결됨  
+-   tOrderSave: 초기 오더 정보 및 완료 오더 정보 저장 collection  
+-   초기 insert 된 정보가 복사됨  
+-   order state가 3(취소), 7(배달완료) 된 경우 tOrder에서 tOrderSave로 이동
+    
+tReview: 리뷰 정보 collection  
+- tOrderSave에 state: 7(배달완료)인 document와 연결됨  
+- orderDay와 orderId를 통해서 tOrderSave와 연결  
+tReviewSave: 초기 리뷰 및 리뷰 변경사항에 대해서 보관하기 위한 collection  
+#### 시퀀스
+sID: 각 collection에 존재하는 id(objectId가 아님)를 생성하기 위한 시퀀스  
 sOrderCount: Daily로 orderId를 생성하기 위한 시퀀스
+
 
 ## 기술스택
 
@@ -85,34 +86,34 @@ go mod tidy
 ```
 
 #### DB 생성
-접근 정보 및 DB명은 `WBABEProject-09\config\config.toml`에 명시되어 있으며, 인증은 따로 하지않음
-초기 DB명: `WBABEProject-09`
+기존에 mongoDB가 설치되어있다고 가정(개발 환경에서는 `docker pull mongo`를 활용함)  
+접근 정보 및 DB명은 `WBABEProject-09\config\config.toml`에 명시되어 있으며, 인증은 따로 하지않음  
+초기 DB명: `WBABEProject-09`  
 #### 서버 실행
 `go run main.go`를 통해 서버를 실행
 #### 초기 데이터 구축
-`WBABEProject-09\controller\controller_test.go' 경로에 초기 데이터 구축을 위한 Test가 존재
-
-`go run main.go`를 통해 서버가 정상적으로 실행된 상황에서 test 진행시 DB에 테스트 진행을 위한 user, menu, order 초기 정보가 쌓임
-(review 및 수정등에 대해서는 아직 미지원)
+`WBABEProject-09\controller\controller_test.go' 경로에 초기 데이터 구축을 위한 Test가 존재  
+`go run main.go`를 통해 서버가 정상적으로 실행된 상황에서 test 진행시 DB에 테스트 진행을 위한 user, menu, order 초기 정보가 쌓임  
+(review 및 수정등에 대해서는 아직 미지원)  
 
 ## 1차 회고록
 
 ### 급할수록 돌아가라
-작업시간이 적다고 생각해 빠르게 개발을 하려 할수록 다시 고치고, 나중에 바꾸고 하는 시간이 점점 늘어남
-당장 작업하는 기능에 대한 예시만 찾으려 하니 정리가 안되고 똑같은 자료를 계속 반복해서 붙잡고 씨름하는데 시간을 낭비함
+작업시간이 적다고 생각해 빠르게 개발을 하려 할수록 다시 고치고, 나중에 바꾸고 하는 시간이 점점 늘어남  
+당장 작업하는 기능에 대한 예시만 찾으려 하니 정리가 안되고 똑같은 자료를 계속 반복해서 붙잡고 씨름하는데 시간을 낭비함  
 
 ### 급할수록 설계해라
-기능을 만든다에 초점을 맞춰버리면서 요구사항과 설계를 대충하게됨,
-설계를 경시한만큼 그 대가는 작업한 규모가 커질수록 더 큰 변경사항으로 다시 다가옴
-요구사항에 단편적으로 대응하면서 전체적인 시스템을 고려하지 못함
-개발 능력만큼 설계능력 또한 매우 중요하다는 것을 깨달음
+기능을 만든다에 초점을 맞춰버리면서 요구사항과 설계를 대충하게됨,  
+설계를 경시한만큼 그 대가는 작업한 규모가 커질수록 더 큰 변경사항으로 다시 다가옴  
+요구사항에 단편적으로 대응하면서 전체적인 시스템을 고려하지 못함  
+개발 능력만큼 설계능력 또한 매우 중요하다는 것을 깨달음  
 
 ### 누군가 옆에 있다고 생각하라
-혼자 개발한다고 생각하니 깔끔한 코드나 구조에 대해서 신경안쓰고 급한대로 이리저리 붙여쓴 스파게티 코드가 됨
-제출기한이 다가오면서 다시한번 바라보니 한것도 없는데 난잡해 보임
+혼자 개발한다고 생각하니 깔끔한 코드나 구조에 대해서 신경안쓰고 급한대로 이리저리 붙여쓴 스파게티 코드가 됨  
+제출기한이 다가오면서 다시한번 바라보니 한것도 없는데 난잡해 보임  
 
 ### 시간이 된다면 공식문서를 보라
-가장 많이 시간이 낭비된 것은 mongodb aggregate에서 lookup을 통해 join하는 과정
-두번째로 낭비된 것은 aggregate query를 Go에 mongo-driver 상으로 bson 구조를 맞추는 일이었음
-마음이 급한만큼 기술적인 이해대신 구글창에 `three collection lookup example in go`와 같이 당장 내게 필요한 예제를 찾아다님
-결과적으로 이해하지도 못하는 예제를 붙잡으며 시간을 낭비함
+가장 많이 시간이 낭비된 것은 mongodb aggregate에서 lookup을 통해 join하는 과정  
+두번째로 낭비된 것은 aggregate query를 Go에 mongo-driver 상으로 bson 구조를 맞추는 일이었음  
+마음이 급한만큼 기술적인 이해대신 구글창에 `three collection lookup example in go`와 같이 당장 내게 필요한 예제를 찾아다님  
+결과적으로 이해하지도 못하는 예제를 붙잡으며 시간을 낭비함  
