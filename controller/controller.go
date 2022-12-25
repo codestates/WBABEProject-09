@@ -106,6 +106,70 @@ func (p *Controller) ReviewBind(c *gin.Context, review *model.Review) bool {
 	return true
 }
 
+// GetMenuControl godoc
+//
+//	@Summary		call GetMenuControl, return menu data by []model.Menu.
+//	@Description	menu data 조회를 위한 기능.
+//	@name			GetMenuControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			sortBy	query	string	false	"recommend, star, orderCount, date"
+//	@Param			checkReview	query	int	false	"리뷰 확인 여부"
+//	@Router			/customer/menu [get]
+//	@Router			/owner/menu [get]
+//	@Success		200	{object}	[]primitive.M
+func (p *Controller) GetMenuControl(c *gin.Context) {
+
+	sortBy := c.Query("sortBy")
+	checkReview, _ := strconv.Atoi(c.GetHeader("checkReview"))
+
+	if sortBy == "" {
+		sortBy = "_id"
+		return
+	}
+	menuResult, err := p.md.GetMenuModel(sortBy, checkReview)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "메뉴를 검색하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, menuResult)
+	return
+}
+
+// GetMenuDetailControl godoc
+//
+//	@Summary		call GetMenuDetailControl, return menu data by model.Menu.
+//	@Description	menu data 조회를 위한 기능.
+//	@name			GetMenuControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			menuId	header	string	true	"recommend, star, orderCount, date"
+//	@Router			/customer/menu/detail [get]
+//	@Router			/owner/menu/detail [get]
+//	@Success		200	{object}	[]primitive.M
+func (p *Controller) GetMenuDetailControl(c *gin.Context) {
+
+	menuId, _ := strconv.Atoi(c.GetHeader("menuId"))
+	if !p.MenuValidation(c, menuId) {
+		return
+	}
+	menuResult, err := p.md.GetMenuDetailModel(menuId)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "메뉴를 검색하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, menuResult)
+	return
+}
+
 // InsertMenuControl godoc
 //
 //	@Summary		call InsertMenuControl, return menu data by model.Menu.
@@ -212,6 +276,50 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"msg": "ok"})
+	return
+}
+
+// GetOrderControl godoc
+//
+//	@Summary		call GetOrderControl, return order data by []bson.M
+//	@Description	order data 조회를 위한 기능.
+//	@name			GetOrderControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Router			/customer/order [get]
+//	@Router			/owner/order [get]
+//	@Success		200	{object}	[]bson.M
+func (p *Controller) GetOrderControl(c *gin.Context) {
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+
+	if userId == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "user ID가 유효하지 않습니다",
+		})
+		return
+	}
+	userType, err := p.CheckUser(userId)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "유저 정보를 확인할 수 없습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	inOrderResult, inOrderErr := p.md.GetInOrderModel(userId, userType)
+	doneOrderResult, doneOrderErr := p.md.GetDoneOrderModel(userId, userType)
+
+	if inOrderErr != nil || doneOrderErr != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "오더를 검색하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	// 진행오더와 완료오더 확인 api를 분리할 수 있지만,
+	c.JSON(200, gin.H{"진행오더": inOrderResult, "완료오더": doneOrderResult})
 	return
 }
 
@@ -326,6 +434,44 @@ func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
 	return
 }
 
+// GetReviewControl godoc
+//
+//	@Summary		call GetReviewControl, return result by []model.Review.
+//	@Description	review data 확인을 위한 기능.
+//	@name			GetReviewControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Param			sortBy	query	string	false	"정렬할 컬럼명"
+//	@Router			/customer/order/review [get]
+//	@Success		200	{object}	[]model.Review
+func (p *Controller) GetReviewControl(c *gin.Context) {
+
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+
+	if !p.UserValidation(c, ut.TypeCustomer, userId) {
+		return
+	}
+
+	sortBy := c.Query("sortBy")
+
+	if sortBy == "" {
+		sortBy = "_id"
+	}
+
+	reviewResult, err := p.md.GetReviewModel(userId, sortBy)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "리뷰를 조회하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, reviewResult)
+	return
+}
+
 // InsertReviewControl godoc
 //
 //	@Summary		call InsertReviewControl, return result by json.
@@ -334,7 +480,7 @@ func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
-//	@Param			menu	body	model.Review	true	"{orderDay, orderId, star, content}"
+//	@Param			review	body	model.Review	true	"{orderDay, orderId, star, content}"
 //	@Router			/customer/order/review [post]
 //	@Success		200	{object}	model.Review
 func (p *Controller) InsertReviewControl(c *gin.Context) {
