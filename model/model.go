@@ -349,6 +349,7 @@ func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
 
 			// aggregate 결과물에서 avg를 추출하는 과정
 			// 더 좋은 구조가 있을꺼 같지만, 시간이 너무 소요되서 일단 동작하니 pass
+			// - TODO - 컨버터 고려하기
 			type avgResult struct {
 				AvgStar float64 `bson:"avgStar"`
 			}
@@ -517,6 +518,8 @@ func (p *Model) UpdateMenuModel(menuId int, menuData Menu) error {
 		return err
 	}
 
+	// 업데이트 대상을 변경사항으로 구분해 append 하는 방식
+	// 좋은 구성인지는 잘 모르겠음
 	updateTarget := bson.D{}
 	switch {
 	case menuData.Category != oldMenu.Category:
@@ -678,12 +681,14 @@ func (p *Model) UpdateCustomerOrderModel(orderData Order) error {
 		return err
 	}
 
-	// -TODO- 리턴된 비교map을 활용해 취소된 메뉴와 추가된 메뉴에 대한 menu count 증가 로직이 필요
+	// - TODO - 리턴된 비교map을 활용해 취소된 메뉴와 추가된 메뉴에 대한 menu count 증가 로직이 필요
 	// 시간 배분을 고려해 나중에 작업
 	_, compareResult := CompareMenu(oldOrder.Menu, orderData.Menu)
 
 	// 배달중 이상의 상태에서는 오더 추가가 불가능
 	if compareResult == 2 && orderData.State >= ot.StateInDelivery {
+		// 추가불가능 경우 리턴된 비교map을 활용해 기존 order외 추가건은 신규 오더로 전환시켜야함
+		// 시간상 - TODO - 로 menu count 작업시 같이 진행
 		log.Error("오더 상태 변경 에러")
 		errorMsg := fmt.Sprintf("오더를 추가할 수 없습니다. 현재상태: %s", ot.GetOrderStateText(orderData.State))
 		return errors.New(errorMsg)

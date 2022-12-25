@@ -8,6 +8,9 @@ import (
 	"testing"
 )
 
+// main.go 실행과 별개적으로 유닛 테스트를 할 수 있는 구조가 필요 - TODO -
+// controller 대신 model unit 테스트를 활용하는 방안 고려
+
 // var ownerUserId = "63a49555681a8bac48b5e47b"
 // var customerUserId = "63a49555681a8bac48b5e47c"
 // var menuId = "63a4951a681a8bac48b5e47a"

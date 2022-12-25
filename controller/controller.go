@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 공통적으로 error에 대한 처리가 부실함
+// - TODO - 로그: 상세하게 강화, http: statusCode를 활용해 각 상황에 대한 error 구분 필요, error: 에러 발생사항 관련된 개별 정보(발생 위치 등)를 좀더 상세하게 명시
 type Controller struct {
 	md *model.Model
 }

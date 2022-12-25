@@ -26,6 +26,7 @@ func main() {
 	var configFlag = flag.String("config", "./config/config.toml", "toml file to use for configuration")
 	flag.Parse()
 
+	// controller와 model이 한개의 파일로 구성됨, order, menu, 주문자, 피주문자 등으로 나눠서 관리가 필요함 - TODO -
 	//model 모듈 선언
 	if cf, err := conf.NewConfig(*configFlag); err != nil { // config 모듈 설정
 		fmt.Printf("init config failed, err:%v\n", err)
