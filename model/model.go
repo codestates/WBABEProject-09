@@ -45,8 +45,7 @@ type User struct {
 
 // 2d1c3bec4f68afa657d5c39ec98e2b6289e1ee19 commit에서 설계를 변경
 // Order에 포함되던 Review를 콜렉션 상으로 서로 분리시킴
-// 왜 분리시켰는지는 모르겠음, 졸려서 실수했나봄
-// 시간 배분을 고려해 추후에 다시 합치는걸 고려 - TODO -
+// 다시 생각해보니 설계적으로 실수함 추후 다시 고려- TODO -
 type Order struct {
 	Id       *primitive.ObjectID `bson:"_id,omitempty"`
 	UserId   int                 `json:"userId" bson:"userId"`
@@ -161,7 +160,11 @@ func NewReview() Review {
 func (p *Model) GetAutoId(idType string) (int, error) {
 
 	filter := bson.M{"_id": idType}
-	update := bson.D{{"$inc", bson.D{{"seq", 1}}}}
+	update := bson.D{
+		{Key: "$inc", Value: bson.D{
+			{Key: "seq", Value: 1},
+		}},
+	}
 	upsert := true
 	after := options.After
 	opt := options.FindOneAndUpdateOptions{
@@ -186,7 +189,11 @@ func (p *Model) GetAutoId(idType string) (int, error) {
 func (p *Model) GetOrderId(day string) (int, error) {
 
 	filter := bson.M{"_id": day}
-	update := bson.D{{"$inc", bson.D{{"seq", 1}}}}
+	update := bson.D{
+		{Key: "$inc", Value: bson.D{
+			{Key: "seq", Value: 1},
+		}},
+	}
 	upsert := true
 	after := options.After
 	opt := options.FindOneAndUpdateOptions{
@@ -262,9 +269,13 @@ func (p *Model) CheckOrderMenuModel(orderData *Order) error {
 
 		// 주문자가 일치하고 배달 완료로 오더가 완료된 메뉴를 대상으로 집계
 		matchState := bson.D{
-			{"userId", orderData.UserId},
-			{"menu", bson.D{{"$elemMatch", bson.D{{"menuId", orderMenuData.MenuId}}}}},
-			{"state", 7},
+			{Key: "userId", Value: orderData.UserId},
+			{Key: "menu", Value: bson.D{
+				{Key: "$elemMatch", Value: bson.D{
+					{Key: "menuId", Value: orderMenuData.MenuId},
+				}},
+			}},
+			{Key: "state", Value: 7},
 		}
 
 		findOpt := options.FindOne()
@@ -272,10 +283,10 @@ func (p *Model) CheckOrderMenuModel(orderData *Order) error {
 		// 배달 완료로 별도에 orderSave 콜렉션에 저장된 과거 주문 내역을 참조
 		findErr := p.orderSaveCol.FindOne(context.TODO(), matchState, findOpt).Decode(&findResult)
 		if findErr == nil {
-			updateTarget = append(updateTarget, bson.E{"reorderCount", 1})
+			updateTarget = append(updateTarget, bson.E{Key: "reorderCount", Value: 1})
 		}
-		updateTarget = append(updateTarget, bson.E{"orderCount", 1})
-		update := bson.D{{"$inc", updateTarget}}
+		updateTarget = append(updateTarget, bson.E{Key: "orderCount", Value: 1})
+		update := bson.D{{Key: "$inc", Value: updateTarget}}
 		result := p.menuCol.FindOneAndUpdate(context.TODO(), filter, update)
 		err := result.Err()
 		if err != nil {
@@ -295,32 +306,43 @@ func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
 	for _, orderMenuData := range orderData.Menu {
 		pipeline := mongo.Pipeline{
 			{
-				{"$lookup", bson.D{
-					{"from", "tReview"},
-					{"let",
-						bson.M{"order_day": "$orderDay", "order_id": "$orderId"},
-					},
-					{"pipeline", bson.A{bson.D{
-						{"$match", bson.D{
-							{"$expr", bson.D{
-								{"$and", []interface{}{
+				{Key: "$lookup", Value: bson.D{
+					{Key: "from", Value: "tReview"},
+					{Key: "let", Value: bson.M{
+						"order_day": "$orderDay",
+						"order_id":  "$orderId",
+					}},
+					{Key: "pipeline", Value: bson.A{bson.D{
+						{Key: "$match", Value: bson.D{
+							{Key: "$expr", Value: bson.D{
+								{Key: "$and", Value: []interface{}{
 									bson.M{"$eq": []string{"$orderDay", "$$order_day"}},
 									bson.M{"$eq": []string{"$orderId", "$$order_id"}},
 								}},
 							}},
 						}},
 					}}},
-					{"as", "orderReview"},
+					{Key: "as", Value: "orderReview"},
 				}},
 			},
-			{{"$unwind", bson.D{{"path", "$orderReview"}}}},
-
-			{{"$match", bson.D{{"state", 7}, {"menu.menuId", orderMenuData.MenuId}}}},
-			{{"$group", bson.D{
-				{"_id", orderMenuData.MenuId},
-				{"avgStar", bson.M{"$avg": "$orderReview.star"}},
+			{
+				{Key: "$unwind", Value: bson.D{
+					{Key: "path", Value: "$orderReview"},
+				}},
 			},
-			}},
+
+			{
+				{Key: "$match", Value: bson.D{
+					{Key: "state", Value: 7},
+					{Key: "menu.menuId", Value: orderMenuData.MenuId},
+				}},
+			},
+			{
+				{Key: "$group", Value: bson.D{
+					{Key: "_id", Value: orderMenuData.MenuId},
+					{Key: "avgStar", Value: bson.M{"$avg": "$orderReview.star"}},
+				}},
+			},
 		}
 		cursor, _ := p.orderSaveCol.Aggregate(context.TODO(), pipeline)
 		if cursor.TryNext(context.TODO()) {
@@ -338,7 +360,11 @@ func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
 			if updateStar != 0 {
 
 				updateFilter := bson.M{"menuId": orderMenuData.MenuId}
-				update := bson.D{{"$set", bson.D{{"star", updateStar}}}}
+				update := bson.D{
+					{Key: "$set", Value: bson.D{
+						{Key: "star", Value: updateStar},
+					}},
+				}
 				_, err := p.menuCol.UpdateOne(context.TODO(), updateFilter, update)
 				if err != nil {
 					log.Error("메뉴 star 수정 에러", err.Error())
@@ -385,7 +411,7 @@ func (p *Model) GetMenuModel(sortBy string, checkReview int) ([]primitive.M, err
 	} else {
 		// switch 문으로 분기 처리를 했었지만, 잘못된 데이터가 들어와도 기본 정렬이 됨
 		// sortBy에 제대로만 입력했으면 정렬은 맞춰서 되도록 SetSort 1줄로 줄임
-		findOptions := options.Find().SetSort(bson.D{{sortBy, -1}})
+		findOptions := options.Find().SetSort(bson.D{{Key: sortBy, Value: -1}})
 		cursor, err := p.menuCol.Find(context.TODO(), bson.D{}, findOptions)
 		if err != nil {
 			log.Error("메뉴 조회 에러", err.Error())
@@ -406,15 +432,15 @@ func (p *Model) GetMenuDetailModel(meniId int) ([]bson.M, error) {
 
 	pipeline := mongo.Pipeline{
 		{
-			{"$lookup", bson.D{
-				{"from", "tOrderSave"},
-				{"let",
-					bson.M{"order_day": "$orderDay", "order_id": "$orderId"},
+			{Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: "tOrderSave"},
+				{Key: "let",
+					Value: bson.M{"order_day": "$orderDay", "order_id": "$orderId"},
 				},
-				{"pipeline", bson.A{bson.D{
-					{"$match", bson.D{
-						{"$expr", bson.D{
-							{"$and", []interface{}{
+				{Key: "pipeline", Value: bson.A{bson.D{
+					{Key: "$match", Value: bson.D{
+						{Key: "$expr", Value: bson.D{
+							{Key: "$and", Value: []interface{}{
 								bson.M{"$eq": []string{"$orderDay", "$$order_day"}},
 								bson.M{"$eq": []string{"$orderId", "$$order_id"}},
 								bson.M{"$eq": bson.A{"$state", 7}},
@@ -422,17 +448,17 @@ func (p *Model) GetMenuDetailModel(meniId int) ([]bson.M, error) {
 						}},
 					}},
 				}}},
-				{"as", "orderReview"},
+				{Key: "as", Value: "orderReview"},
 			}},
 		},
-		{{"$unwind", bson.D{{"path", "$orderReview"}}}},
+		{{Key: "$unwind", Value: bson.D{{Key: "path", Value: "$orderReview"}}}},
 
-		{{"$match", bson.D{{"orderReview.menu.menuId", meniId}}}},
-		{{"$project", bson.D{
-			{"_id", 0},
-			{"userId", 1},
-			{"star", 1},
-			{"content", 1},
+		{{Key: "$match", Value: bson.D{{Key: "orderReview.menu.menuId", Value: meniId}}}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 0},
+			{Key: "userId", Value: 1},
+			{Key: "star", Value: 1},
+			{Key: "content", Value: 1},
 		},
 		}},
 	}
@@ -494,29 +520,29 @@ func (p *Model) UpdateMenuModel(menuId int, menuData Menu) error {
 	updateTarget := bson.D{}
 	switch {
 	case menuData.Category != oldMenu.Category:
-		updateTarget = append(updateTarget, bson.E{"category", menuData.Category})
+		updateTarget = append(updateTarget, bson.E{Key: "category", Value: menuData.Category})
 		fallthrough
 	case menuData.Name != oldMenu.Name:
-		updateTarget = append(updateTarget, bson.E{"name", menuData.Name})
+		updateTarget = append(updateTarget, bson.E{Key: "name", Value: menuData.Name})
 		fallthrough
 	case menuData.Price != oldMenu.Price:
-		updateTarget = append(updateTarget, bson.E{"price", menuData.Price})
+		updateTarget = append(updateTarget, bson.E{Key: "price", Value: menuData.Price})
 		fallthrough
 	case menuData.Recommend != oldMenu.Recommend:
-		updateTarget = append(updateTarget, bson.E{"recommend", menuData.Recommend})
+		updateTarget = append(updateTarget, bson.E{Key: "recommend", Value: menuData.Recommend})
 		fallthrough
 	case menuData.OrderState != oldMenu.OrderState:
-		updateTarget = append(updateTarget, bson.E{"orderState", menuData.OrderState})
+		updateTarget = append(updateTarget, bson.E{Key: "orderState", Value: menuData.OrderState})
 		fallthrough
 	case menuData.OrderDailyLimit != oldMenu.OrderDailyLimit:
-		updateTarget = append(updateTarget, bson.E{"orderDailyLimit", menuData.OrderDailyLimit})
+		updateTarget = append(updateTarget, bson.E{Key: "orderDailyLimit", Value: menuData.OrderDailyLimit})
 		fallthrough
 	default:
-		updateTarget = append(updateTarget, bson.E{"modifyAt", time.Now()})
+		updateTarget = append(updateTarget, bson.E{Key: "modifyAt", Value: time.Now()})
 	}
 
 	updateFilter := bson.M{"menuId": menuId}
-	update := bson.D{{"$set", updateTarget}}
+	update := bson.D{{Key: "$set", Value: updateTarget}}
 	_, err := p.menuCol.UpdateOne(context.TODO(), updateFilter, update)
 	if err != nil {
 		log.Error("메뉴 수정 에러", err.Error())
@@ -540,7 +566,7 @@ func (p *Model) DeleteMenuModel(menuId int) error {
 	}
 
 	filter := bson.M{"menuId": menuId}
-	delete := bson.D{{"$set", bson.D{{"use", false}}}}
+	delete := bson.D{{Key: "$set", Value: bson.D{{Key: "use", Value: false}}}}
 	_, err := p.menuCol.UpdateOne(context.TODO(), filter, delete)
 
 	if err != nil {
@@ -558,7 +584,11 @@ func (p *Model) GetInOrderModel(userId int, userType int) (*[]bson.M, error) {
 		filter = bson.M{"userId": userId}
 	}
 
-	findOptions := options.Find().SetSort(bson.D{{"state", 1}}).SetProjection(bson.D{{"_id", 0}})
+	findOptions := options.Find().SetSort(
+		bson.D{{Key: "state", Value: 1}},
+	).SetProjection(
+		bson.D{{Key: "_id", Value: 0}},
+	)
 	cursor, err := p.orderCol.Find(context.TODO(), filter, findOptions)
 	if err == mongo.ErrNoDocuments {
 		log.Error("조회 결과 없음", err.Error())
@@ -583,7 +613,11 @@ func (p *Model) GetDoneOrderModel(userId int, userType int) (*[]bson.M, error) {
 		filter = bson.M{"userId": userId}
 	}
 
-	findOptions := options.Find().SetSort(bson.D{{"createAt", -1}}).SetProjection(bson.D{{"_id", 0}})
+	findOptions := options.Find().SetSort(
+		bson.D{{Key: "createAt", Value: -1}},
+	).SetProjection(
+		bson.D{{Key: "_id", Value: 0}},
+	)
 	cursor, err := p.orderSaveCol.Find(context.TODO(), filter, findOptions)
 	if err == mongo.ErrNoDocuments {
 		log.Error("조회 결과 없음", err.Error())
@@ -664,20 +698,20 @@ func (p *Model) UpdateCustomerOrderModel(orderData Order) error {
 	updateTarget := bson.D{}
 	switch {
 	case orderData.Phone != oldOrder.Phone:
-		updateTarget = append(updateTarget, bson.E{"phone", orderData.Phone})
+		updateTarget = append(updateTarget, bson.E{Key: "phone", Value: orderData.Phone})
 		fallthrough
 	case orderData.Address != oldOrder.Address:
-		updateTarget = append(updateTarget, bson.E{"address", orderData.Address})
+		updateTarget = append(updateTarget, bson.E{Key: "address", Value: orderData.Address})
 		fallthrough
 	case compareResult != 0:
-		updateTarget = append(updateTarget, bson.E{"menu", orderData.Menu})
+		updateTarget = append(updateTarget, bson.E{Key: "menu", Value: orderData.Menu})
 		fallthrough
 	default:
-		updateTarget = append(updateTarget, bson.E{"modifyAt", time.Now()})
+		updateTarget = append(updateTarget, bson.E{Key: "modifyAt", Value: time.Now()})
 	}
 
 	updateFilter := bson.M{"userId": orderData.UserId, "orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
-	update := bson.D{{"$set", updateTarget}}
+	update := bson.D{{Key: "$set", Value: updateTarget}}
 	_, err := p.orderCol.UpdateOne(context.TODO(), updateFilter, update)
 	if err != nil {
 		log.Error("오더 수정 에러", err.Error())
@@ -715,7 +749,11 @@ func (p *Model) UpdateOwnerOrderModel(orderData Order) error {
 	}
 
 	updateFilter := bson.M{"orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
-	update := bson.D{{"$set", bson.D{{"state", orderData.State}}}}
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "state", Value: orderData.State},
+		}},
+	}
 	_, err := p.orderCol.UpdateOne(context.TODO(), updateFilter, update)
 	if err != nil {
 		log.Error("오더 상태 수정 에러", err.Error())
@@ -728,7 +766,7 @@ func (p *Model) GetReviewModel(userId int, sortBy string) ([]Review, error) {
 	var reviewList []Review
 
 	filter := bson.M{"userId": userId}
-	findOptions := options.Find().SetSort(bson.D{{sortBy, -1}})
+	findOptions := options.Find().SetSort(bson.D{{Key: sortBy, Value: -1}})
 	cursor, err := p.reviewCol.Find(context.TODO(), filter, findOptions)
 	if err != nil {
 		log.Error("리뷰 조회 에러", err.Error())
@@ -744,13 +782,22 @@ func (p *Model) GetReviewModel(userId int, sortBy string) ([]Review, error) {
 func (p *Model) InsertReviewModel(reviewData Review) (*Review, error) {
 
 	var targetOrder Order
-	orderFindFilter := bson.M{"userId": reviewData.UserId, "orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "state": 7}
+	orderFindFilter := bson.M{
+		"userId":   reviewData.UserId,
+		"orderDay": reviewData.OrderDay,
+		"orderId":  reviewData.OrderId,
+		"state":    7,
+	}
 	if err := p.orderSaveCol.FindOne(context.TODO(), orderFindFilter).Decode(&targetOrder); err != nil {
 		log.Error("리뷰 타겟 오더 조회 에러", err.Error())
 		return nil, err
 	}
 	var oldReview Review
-	reviewFindFilter := bson.M{"userId": reviewData.UserId, "orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId}
+	reviewFindFilter := bson.M{
+		"userId":   reviewData.UserId,
+		"orderDay": reviewData.OrderDay,
+		"orderId":  reviewData.OrderId,
+	}
 	if err := p.reviewCol.FindOne(context.TODO(), reviewFindFilter).Decode(&oldReview); err == nil {
 		log.Error("리뷰 저장 에러: 이미 리뷰가 존재")
 		return nil, errors.New("이미 리뷰가 존재함")
@@ -784,14 +831,23 @@ func (p *Model) InsertReviewModel(reviewData Review) (*Review, error) {
 func (p *Model) UpdateReviewModel(reviewData Review) error {
 
 	var targetOrder Order
-	findOrderFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId, "state": 7}
+	findOrderFilter := bson.M{
+		"orderDay": reviewData.OrderDay,
+		"orderId":  reviewData.OrderId,
+		"userId":   reviewData.UserId,
+		"state":    7,
+	}
 	if err := p.orderSaveCol.FindOne(context.TODO(), findOrderFilter).Decode(&targetOrder); err != nil {
 		log.Error("오더 조회 에러", err.Error())
 		return err
 	}
 
 	var oldReview Review
-	findReviewFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
+	findReviewFilter := bson.M{
+		"orderDay": reviewData.OrderDay,
+		"orderId":  reviewData.OrderId,
+		"userId":   reviewData.UserId,
+	}
 	if err := p.reviewCol.FindOne(context.TODO(), findReviewFilter).Decode(&oldReview); err != nil {
 		log.Error("리뷰 조회 에러", err.Error())
 		return err
@@ -806,17 +862,17 @@ func (p *Model) UpdateReviewModel(reviewData Review) error {
 
 	switch {
 	case reviewData.Star != oldReview.Star:
-		updateTarget = append(updateTarget, bson.E{"star", reviewData.Star})
+		updateTarget = append(updateTarget, bson.E{Key: "star", Value: reviewData.Star})
 		fallthrough
 	case reviewData.Content != oldReview.Content:
-		updateTarget = append(updateTarget, bson.E{"content", reviewData.Content})
+		updateTarget = append(updateTarget, bson.E{Key: "content", Value: reviewData.Content})
 		fallthrough
 	default:
-		updateTarget = append(updateTarget, bson.E{"modifyAt", time.Now()})
+		updateTarget = append(updateTarget, bson.E{Key: "modifyAt", Value: time.Now()})
 	}
 
 	updateFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
-	update := bson.D{{"$set", updateTarget}}
+	update := bson.D{{Key: "$set", Value: updateTarget}}
 	_, err := p.reviewCol.UpdateOne(context.TODO(), updateFilter, update)
 	if err != nil {
 		log.Error("리뷰 상태 수정 에러", err.Error())
@@ -832,14 +888,23 @@ func (p *Model) UpdateReviewModel(reviewData Review) error {
 func (p *Model) DeleteReviewModel(reviewData Review) error {
 
 	var targetOrder Order
-	findOrderFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId, "state": 7}
+	findOrderFilter := bson.M{
+		"orderDay": reviewData.OrderDay,
+		"orderId":  reviewData.OrderId,
+		"userId":   reviewData.UserId,
+		"state":    7,
+	}
 	if err := p.orderSaveCol.FindOne(context.TODO(), findOrderFilter).Decode(&targetOrder); err != nil {
 		log.Error("오더 조회 에러", err.Error())
 		return err
 	}
 
 	var oldReview Review
-	findReviewFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
+	findReviewFilter := bson.M{
+		"orderDay": reviewData.OrderDay,
+		"orderId":  reviewData.OrderId,
+		"userId":   reviewData.UserId,
+	}
 	if err := p.reviewCol.FindOne(context.TODO(), findReviewFilter).Decode(&oldReview); err != nil {
 		log.Error("리뷰 조회 에러", err.Error())
 		return err
@@ -850,7 +915,11 @@ func (p *Model) DeleteReviewModel(reviewData Review) error {
 		return err
 	}
 
-	deleteFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
+	deleteFilter := bson.M{
+		"orderDay": reviewData.OrderDay,
+		"orderId":  reviewData.OrderId,
+		"userId":   reviewData.UserId,
+	}
 	_, err := p.reviewCol.DeleteOne(context.TODO(), deleteFilter)
 	if err != nil {
 		log.Error("리뷰 상태 삭제 에러", err.Error())

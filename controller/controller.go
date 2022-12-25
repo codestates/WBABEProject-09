@@ -159,7 +159,6 @@ func (p *Controller) GetMenuControl(c *gin.Context) {
 
 	if sortBy == "" {
 		sortBy = "_id"
-		return
 	}
 	menuResult, err := p.md.GetMenuModel(sortBy, checkReview)
 
@@ -181,7 +180,7 @@ func (p *Controller) GetMenuControl(c *gin.Context) {
 //	@name			GetMenuControl
 //	@Accept			json
 //	@Produce		json
-//	@Param			menuId	header	string	true	"recommend, star, orderCount, date"
+//	@Param			menuId	header	string	true	"Menu Id"
 //	@Router			/customer/menu/detail [get]
 //	@Router			/owner/menu/detail [get]
 //	@Success		200	{object}	[]model.Menu
