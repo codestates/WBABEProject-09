@@ -43,6 +43,10 @@ type User struct {
 	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 
+// 2d1c3bec4f68afa657d5c39ec98e2b6289e1ee19 commit에서 설계를 변경
+// Order에 포함되던 Review를 콜렉션 상으로 서로 분리시킴
+// 왜 분리시켰는지는 모르겠음, 졸려서 실수했나봄
+// 시간 배분을 고려해 추후에 다시 합치는걸 고려 - TODO -
 type Order struct {
 	Id       *primitive.ObjectID `bson:"_id,omitempty"`
 	UserId   int                 `json:"userId" bson:"userId"`
@@ -422,7 +426,7 @@ func (p *Model) DeleteMenuModel(menuId int) error {
 
 func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
 
-	now := time.Now().UTC()
+	now := time.Now()
 	day := now.Format("2006-01-02")
 	orderId, err := p.GetOrderId(day)
 
@@ -519,6 +523,7 @@ func (p *Model) UpdateOwnerOrderModel(orderData Order) error {
 	case orderData.State == 3 || orderData.State == 7:
 		oldOrder.State = orderData.State
 
+		oldOrder.Id = nil
 		if _, err := p.orderSaveCol.InsertOne(context.TODO(), oldOrder); err != nil {
 			log.Error("오더 저장 에러", err.Error())
 			return err
@@ -570,6 +575,8 @@ func (p *Model) InsertReviewModel(reviewData Review) (*Review, error) {
 	if err != nil {
 		log.Error("초기 리뷰 저장 에러", err.Error())
 	}
+	// 리뷰 추가 후 메뉴에 평점 반영
+	// 중요 동작이 아니고 내부적으로 실패시 Log를 남겨서 err에 대한 별도 처리는 없음
 	err = p.UpdateMenuReviewStarModel(&targetOrder)
 
 	var newReview Review
@@ -579,4 +586,50 @@ func (p *Model) InsertReviewModel(reviewData Review) (*Review, error) {
 		return nil, err
 	}
 	return &newReview, err
+}
+
+func (p *Model) UpdateReviewModel(reviewData Review) error {
+
+	var targetOrder Order
+	findOrderFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId, "state": 7}
+	if err := p.orderSaveCol.FindOne(context.TODO(), findOrderFilter).Decode(&targetOrder); err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return err
+	}
+
+	var oldReview Review
+	findReviewFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
+	if err := p.reviewCol.FindOne(context.TODO(), findReviewFilter).Decode(&oldReview); err != nil {
+		log.Error("리뷰 조회 에러", err.Error())
+		return err
+	}
+	oldReview.Id = nil
+	if _, err := p.reviewSaveCol.InsertOne(context.TODO(), oldReview); err != nil {
+		log.Error("리뷰 백업 에러", err.Error())
+		return err
+	}
+
+	updateTarget := bson.D{}
+
+	switch {
+	case reviewData.Star != oldReview.Star:
+		updateTarget = append(updateTarget, bson.E{"star", reviewData.Star})
+		fallthrough
+	case reviewData.Content != oldReview.Content:
+		updateTarget = append(updateTarget, bson.E{"content", reviewData.Content})
+		fallthrough
+	default:
+		updateTarget = append(updateTarget, bson.E{"modifyAt", time.Now()})
+	}
+
+	updateFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
+	update := bson.D{{"$set", updateTarget}}
+	_, err := p.reviewCol.UpdateOne(context.TODO(), updateFilter, update)
+	if err != nil {
+		log.Error("리뷰 상태 수정 에러", err.Error())
+	}
+
+	// 업데이트 후 메뉴에 평점 반영
+	err = p.UpdateMenuReviewStarModel(&targetOrder)
+	return nil
 }

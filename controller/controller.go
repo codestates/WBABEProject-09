@@ -345,13 +345,13 @@ func (p *Controller) InsertReviewControl(c *gin.Context) {
 		return
 	}
 
-	NewReview := model.NewReview()
-	if !p.ReviewBind(c, &NewReview) {
+	newReview := model.NewReview()
+	if !p.ReviewBind(c, &newReview) {
 		return
 	}
-	NewReview.UserId = userId
+	newReview.UserId = userId
 
-	reviewResult, err := p.md.InsertReviewModel(NewReview)
+	reviewResult, err := p.md.InsertReviewModel(newReview)
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -361,5 +361,41 @@ func (p *Controller) InsertReviewControl(c *gin.Context) {
 		return
 	}
 	c.JSON(200, reviewResult)
+	return
+}
+
+// UpdateReviewControl godoc
+//
+//	@Summary		call UpdateReviewControl, return result by json.
+//	@Description	review data 수정을 위한 기능.
+//	@name			InsertReviewControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Param			menu	body	model.Review	true	"{orderDay, orderId, star, content}"
+//	@Router			/customer/order/review [put]
+//	@Success		200	{object}	controller
+func (p *Controller) UpdateReviewControl(c *gin.Context) {
+
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+
+	if !p.UserValidation(c, ut.TypeCustomer, userId) {
+		return
+	}
+
+	review := model.Review{}
+	if !p.ReviewBind(c, &review) {
+		return
+	}
+	review.UserId = userId
+
+	if err := p.md.UpdateReviewModel(review); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "리뷰를 수정하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, gin.H{"msg": "ok"})
 	return
 }

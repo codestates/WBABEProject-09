@@ -85,7 +85,7 @@ func (p *Router) Idx() *gin.Engine {
 
 		customer.GET("/order/review", p.ct.GetOK)                // 자신이 주문한 order에 대한 리뷰 확인
 		customer.POST("/order/review", p.ct.InsertReviewControl) // 자신이 주문한 order에 대한 리뷰 추가
-		customer.PUT("/order/review", p.ct.GetOK)                // 자신이 주문한 order에 대한 리뷰 수정
+		customer.PUT("/order/review", p.ct.UpdateReviewControl)  // 자신이 주문한 order에 대한 리뷰 수정
 		customer.DELETE("/order/review", p.ct.GetOK)             // 자신이 주문한 order에 대한 리뷰 삭제
 	}
 
