@@ -64,12 +64,14 @@ type OrderMenu struct {
 	Name   string `json:"name" bson:"name"`
 }
 
+// star에 binding validation 적용
+// - TODO - 각 struct 필수 필드에 validation 적용
 type Review struct {
 	Id       *primitive.ObjectID `bson:"_id,omitempty"`
 	UserId   int                 `json:"userId" bson:"userId"`
 	OrderDay string              `json:"orderDay" bson:"orderDay"`
 	OrderId  int                 `json:"orderId" bson:"orderId"`
-	Star     float32             `json:"star" bson:"star"`
+	Star     float32             `json:"star" bson:"star" binding:"gte=0,lte=5"`
 	Content  string              `json:"content" bson:"content"`
 	CreateAt time.Time           `json:"createAt" bson:"createAt"`
 	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
