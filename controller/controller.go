@@ -368,7 +368,7 @@ func (p *Controller) InsertReviewControl(c *gin.Context) {
 //
 //	@Summary		call UpdateReviewControl, return result by json.
 //	@Description	review data 수정을 위한 기능.
-//	@name			InsertReviewControl
+//	@name			UpdateReviewControl
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
@@ -392,6 +392,52 @@ func (p *Controller) UpdateReviewControl(c *gin.Context) {
 	if err := p.md.UpdateReviewModel(review); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": "리뷰를 수정하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, gin.H{"msg": "ok"})
+	return
+}
+
+// DeleteReviewControl godoc
+//
+//	@Summary		call DeleteReviewControl, return result by json.
+//	@Description	review data 삭제를 위한 기능.
+//	@name			DeleteReviewControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			userId	header	string	true	"User ID"
+//	@Param			menu	body	model.Review	true	"{orderDay, orderId}"
+//	@Router			/customer/order/review [delete]
+//	@Success		200	{object}	controller
+func (p *Controller) DeleteReviewControl(c *gin.Context) {
+
+	userId, _ := strconv.Atoi(c.GetHeader("userId"))
+	orderDay := c.Query("orderDay")
+	orderId, _ := strconv.Atoi(c.Query("orderId"))
+	if !p.UserValidation(c, ut.TypeCustomer, userId) {
+		return
+	}
+
+	review := model.Review{}
+
+	review.UserId = userId
+
+	if orderDay == "" || orderId == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message":  "삭제 정보가 잘못됬습니다!",
+			"orderDay": orderDay,
+			"orderId":  orderId,
+		})
+		return
+	}
+
+	review.OrderDay = orderDay
+	review.OrderId = orderId
+	if err := p.md.DeleteReviewModel(review); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "리뷰를 삭제하지 못했습니다!",
 			"error":   err.Error(),
 		})
 		return

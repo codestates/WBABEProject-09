@@ -83,10 +83,10 @@ func (p *Router) Idx() *gin.Engine {
 		customer.POST("/order", p.ct.InsertCustomerOrderControl) // order 주문
 		customer.PUT("/order", p.ct.UpdateCustomerOrderControl)  // 자신이 주문한 order 정보 변경, 삭제 대신 취소 상태로 대신함
 
-		customer.GET("/order/review", p.ct.GetOK)                // 자신이 주문한 order에 대한 리뷰 확인
-		customer.POST("/order/review", p.ct.InsertReviewControl) // 자신이 주문한 order에 대한 리뷰 추가
-		customer.PUT("/order/review", p.ct.UpdateReviewControl)  // 자신이 주문한 order에 대한 리뷰 수정
-		customer.DELETE("/order/review", p.ct.GetOK)             // 자신이 주문한 order에 대한 리뷰 삭제
+		customer.GET("/order/review", p.ct.GetOK)                  // 자신이 주문한 order에 대한 리뷰 확인
+		customer.POST("/order/review", p.ct.InsertReviewControl)   // 자신이 주문한 order에 대한 리뷰 추가
+		customer.PUT("/order/review", p.ct.UpdateReviewControl)    // 자신이 주문한 order에 대한 리뷰 수정
+		customer.DELETE("/order/review", p.ct.DeleteReviewControl) // 자신이 주문한 order에 대한 리뷰 삭제
 	}
 
 	return e

@@ -633,3 +633,37 @@ func (p *Model) UpdateReviewModel(reviewData Review) error {
 	err = p.UpdateMenuReviewStarModel(&targetOrder)
 	return nil
 }
+
+// 리뷰 삭제를 위해 추가했지만, 수정과 기능이 크게 차이가 없음
+// model에서 flag를 받아 수정인지 삭제인지 분기를 타는 것도 방법일듯 함(일단 보류)
+func (p *Model) DeleteReviewModel(reviewData Review) error {
+
+	var targetOrder Order
+	findOrderFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId, "state": 7}
+	if err := p.orderSaveCol.FindOne(context.TODO(), findOrderFilter).Decode(&targetOrder); err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return err
+	}
+
+	var oldReview Review
+	findReviewFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
+	if err := p.reviewCol.FindOne(context.TODO(), findReviewFilter).Decode(&oldReview); err != nil {
+		log.Error("리뷰 조회 에러", err.Error())
+		return err
+	}
+	oldReview.Id = nil
+	if _, err := p.reviewSaveCol.InsertOne(context.TODO(), oldReview); err != nil {
+		log.Error("리뷰 백업 에러", err.Error())
+		return err
+	}
+
+	deleteFilter := bson.M{"orderDay": reviewData.OrderDay, "orderId": reviewData.OrderId, "userId": reviewData.UserId}
+	_, err := p.reviewCol.DeleteOne(context.TODO(), deleteFilter)
+	if err != nil {
+		log.Error("리뷰 상태 삭제 에러", err.Error())
+	}
+
+	// 삭제 후 메뉴에 평점 반영
+	err = p.UpdateMenuReviewStarModel(&targetOrder)
+	return nil
+}
