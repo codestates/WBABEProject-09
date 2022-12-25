@@ -2,11 +2,13 @@ definitions:
   model.Menu:
     properties:
       category:
-        type: integer
+        type: string
       createAt:
         type: string
       id:
         type: string
+      menuId:
+        type: integer
       modifyAt:
         type: string
       name:
@@ -28,21 +30,221 @@ definitions:
       use:
         type: boolean
     type: object
+  model.Order:
+    properties:
+      address:
+        type: string
+      createAt:
+        type: string
+      id:
+        type: string
+      menu:
+        items:
+          $ref: '#/definitions/model.OrderMenu'
+        type: array
+      modifyAt:
+        type: string
+      orderDay:
+        type: string
+      orderId:
+        type: integer
+      phone:
+        type: string
+      state:
+        type: integer
+      userId:
+        type: integer
+    type: object
+  model.OrderMenu:
+    properties:
+      menuId:
+        type: integer
+      name:
+        type: string
+    type: object
+  model.Review:
+    properties:
+      content:
+        type: string
+      createAt:
+        type: string
+      id:
+        type: string
+      modifyAt:
+        type: string
+      orderDay:
+        type: string
+      orderId:
+        type: integer
+      star:
+        type: number
+      userId:
+        type: integer
+    type: object
 info:
   contact: {}
 paths:
+  /customer/order:
+    post:
+      consumes:
+      - application/json
+      description: order data 추가을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: '{userId, menu[{menuID, name}], phone, address}'
+        in: body
+        name: menu
+        required: true
+        schema:
+          $ref: '#/definitions/model.Order'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call InsertCustomerOrderControl, return result by json.
+    put:
+      consumes:
+      - application/json
+      description: 주문자의 order data 수정을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: '{userId, orderDate, orderID , menu[{menuID, name}], phone, address}'
+        in: body
+        name: menu
+        required: true
+        schema:
+          $ref: '#/definitions/model.Order'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call UpdateCustomerOrderControl, return result by json.
+  /customer/order/review:
+    delete:
+      consumes:
+      - application/json
+      description: review data 삭제를 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: Order Day
+        in: query
+        name: orderDay
+        required: true
+        type: string
+      - description: Order Id
+        in: query
+        name: orderId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call DeleteReviewControl, return result by json.
+    post:
+      consumes:
+      - application/json
+      description: review data 추가을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: '{orderDay, orderId, star, content}'
+        in: body
+        name: menu
+        required: true
+        schema:
+          $ref: '#/definitions/model.Review'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Review'
+      summary: call InsertReviewControl, return result by json.
+    put:
+      consumes:
+      - application/json
+      description: review data 수정을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: '{orderDay, orderId, star, content}'
+        in: body
+        name: menu
+        required: true
+        schema:
+          $ref: '#/definitions/model.Review'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call UpdateReviewControl, return result by json.
   /owner/menu:
+    delete:
+      consumes:
+      - application/json
+      description: menu data 삭제을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: Menu ID
+        in: header
+        name: menuId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call DeleteMenuControl, return result by json.
     post:
       consumes:
       - application/json
       description: menu data 추가를 위한 기능.
       parameters:
       - description: User ID
-        in: query
+        in: header
         name: userId
         required: true
         type: string
-      - description: menu{category, name, price, recommend, orderState, orderDailyLimit}
+      - description: '{category, name, price, recommend, orderState, orderDailyLimit}'
         in: body
         name: menu
         required: true
@@ -56,4 +258,58 @@ paths:
           schema:
             $ref: '#/definitions/model.Menu'
       summary: call InsertMenuControl, return menu data by model.Menu.
+    put:
+      consumes:
+      - application/json
+      description: menu data 수정을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: Menu ID
+        in: header
+        name: menuId
+        required: true
+        type: string
+      - description: '{category, name, price, recommend, orderState, orderDailyLimit}'
+        in: body
+        name: menu
+        required: true
+        schema:
+          $ref: '#/definitions/model.Menu'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call UpdateMenuControl, return result by json.
+  /owner/order:
+    put:
+      consumes:
+      - application/json
+      description: 오너가 order state 수정을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: '{orderDate, orderID , state}'
+        in: body
+        name: menu
+        required: true
+        schema:
+          $ref: '#/definitions/model.Order'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call UpdateOwnerOrderControl, return result by json.
 swagger: "2.0"

@@ -152,7 +152,7 @@ func (p *Controller) InsertMenuControl(c *gin.Context) {
 //	@Param			menuId	header	string	true	"Menu ID"
 //	@Param			menu	body	model.Menu	true	"{category, name, price, recommend, orderState, orderDailyLimit}"
 //	@Router			/owner/menu [put]
-//	@Success		200	{object}
+//	@Success		200	{object}	string
 func (p *Controller) UpdateMenuControl(c *gin.Context) {
 
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
@@ -191,7 +191,7 @@ func (p *Controller) UpdateMenuControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menuId	header	string	true	"Menu ID"
 //	@Router			/owner/menu [delete]
-//	@Success		200	{object}	controller
+//	@Success		200	{object}	string
 func (p *Controller) DeleteMenuControl(c *gin.Context) {
 
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
@@ -225,7 +225,7 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Order	true	"{userId, menu[{menuID, name}], phone, address}"
 //	@Router			/customer/order [post]
-//	@Success		200	{object}	controller
+//	@Success		200	{object}	string
 func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
@@ -264,7 +264,7 @@ func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Order	true	"{userId, orderDate, orderID , menu[{menuID, name}], phone, address}"
 //	@Router			/customer/order [put]
-//	@Success		200	{object}	controller
+//	@Success		200	{object}	string
 func (p *Controller) UpdateCustomerOrderControl(c *gin.Context) {
 
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
@@ -300,7 +300,7 @@ func (p *Controller) UpdateCustomerOrderControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Order	true	"{orderDate, orderID , state}"
 //	@Router			/owner/order [put]
-//	@Success		200	{object}	controller
+//	@Success		200	{object}	string
 func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
 
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
@@ -374,7 +374,7 @@ func (p *Controller) InsertReviewControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Review	true	"{orderDay, orderId, star, content}"
 //	@Router			/customer/order/review [put]
-//	@Success		200	{object}	controller
+//	@Success		200	{object}	string
 func (p *Controller) UpdateReviewControl(c *gin.Context) {
 
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
@@ -408,9 +408,10 @@ func (p *Controller) UpdateReviewControl(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
-//	@Param			menu	body	model.Review	true	"{orderDay, orderId}"
+//	@Param			orderDay	query	string	true	"Order Day"
+//	@Param			orderId	query	int	true	"Order Id"
 //	@Router			/customer/order/review [delete]
-//	@Success		200	{object}	controller
+//	@Success		200	{object}	string
 func (p *Controller) DeleteReviewControl(c *gin.Context) {
 
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
