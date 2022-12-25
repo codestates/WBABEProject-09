@@ -339,7 +339,23 @@ func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
 }
 
 func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
+
+	var oldMenu Menu
+	menuFindFilter := bson.M{"category": menuData.Category, "name": menuData.Name}
+	if err := p.menuCol.FindOne(context.TODO(), menuFindFilter).Decode(&oldMenu); err == nil {
+		log.Error("이미 메뉴가 존재합니다.")
+		return nil, errors.New("이미 존재하는 메뉴")
+	}
+
+	// 재발급 대신 일단 중복만 체크하고 pass
+	// 시간이 있다면 중복된 ID 대신 재발급 로직 추가 - TODO -
 	menuId, err := p.GetAutoId("menuId")
+	menuIdFilter := bson.M{"menuId": menuId}
+	if err := p.menuCol.FindOne(context.TODO(), menuIdFilter).Decode(&oldMenu); err == nil {
+		log.Error("메뉴ID가 중복됬습니다.")
+		return nil, errors.New("메뉴ID 중복")
+	}
+
 	menuData.MenuId = menuId
 	res, err := p.menuCol.InsertOne(context.TODO(), menuData)
 
