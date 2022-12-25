@@ -4,7 +4,7 @@ port = ":8080"
 
 [db] #data access object
 host = "mongodb://localhost:27017"
-db = "go-order"
+db = "WBABEProject-09"
 userCollection = "tUser"
 orderCollection = "tOrder"
 orderSaveCollection = "tOrderSave"

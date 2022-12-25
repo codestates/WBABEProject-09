@@ -71,12 +71,15 @@ type Review struct {
 	UserId   int                 `json:"userId" bson:"userId"`
 	OrderDay string              `json:"orderDay" bson:"orderDay"`
 	OrderId  int                 `json:"orderId" bson:"orderId"`
-	Star     float32             `json:"star" bson:"star" binding:"gte=0,lte=5"`
+	Star     float64             `json:"star" bson:"star" binding:"gte=0,lte=5"`
 	Content  string              `json:"content" bson:"content"`
 	CreateAt time.Time           `json:"createAt" bson:"createAt"`
 	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 
+// Review와 Menu에 Star를 float32 처리를 했었지만, 저장시 다음과 같이 변화됨
+// 3.1 => 3.0999999046325684
+// go에 float32와 mongo의 Double 차이라고 판단되어 float64로 변경
 type Menu struct {
 	Id              *primitive.ObjectID `bson:"_id,omitempty"`
 	MenuId          int                 `json:"menuId" bson:"menuId"`
@@ -84,7 +87,7 @@ type Menu struct {
 	Name            string              `json:"name" bson:"name"`
 	Price           int                 `json:"price" bson:"price"`
 	Recommend       bool                `json:"recommend" bson:"recommend"`
-	Star            float32             `json:"star" bson:"star"`
+	Star            float64             `json:"star" bson:"star"`
 	OrderState      int                 `json:"orderState" bson:"orderState"`
 	OrderCount      int                 `json:"orderCount" bson:"orderCount"`
 	OrderDailyLimit int                 `json:"orderDailyLimit" bson:"orderDailyLimit"`
@@ -340,6 +343,81 @@ func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
 	return nil
 }
 
+func (p *Model) GetMenuModel(sortBy string, checkReview int) ([]primitive.M, error) {
+
+	var newMenu []primitive.M
+	// checkReview가 0이 아니면, Review 데이터를 결과에 포함시킴
+	checkReview = 0
+	if checkReview != 0 {
+		// 설계를 잘못해서 3 collection을 join 하려다 실패
+		// 이 부분은 1차 피드백 후 2차에서 다시 작업 예정
+		// - TODO - 설계 다시하기
+	} else {
+		// switch 문으로 분기 처리를 했었지만, 잘못된 데이터가 들어와도 기본 정렬이 됨
+		// sortBy에 제대로만 입력했으면 정렬은 맞춰서 되도록 SetSort 1줄로 줄임
+		findOptions := options.Find().SetSort(bson.D{{sortBy, -1}})
+		cursor, err := p.menuCol.Find(context.TODO(), bson.D{}, findOptions)
+		if err != nil {
+			log.Error("메뉴 조회 에러", err.Error())
+			return nil, err
+		}
+		if err = cursor.All(context.TODO(), &newMenu); err != nil {
+			log.Error("메뉴 조회 에러", err.Error())
+			return nil, err
+		}
+
+	}
+	return newMenu, nil
+}
+
+func (p *Model) GetMenuDetailModel(meniId int) ([]bson.M, error) {
+
+	var bsonResult []bson.M
+
+	pipeline := mongo.Pipeline{
+		{
+			{"$lookup", bson.D{
+				{"from", "tOrderSave"},
+				{"let",
+					bson.M{"order_day": "$orderDay", "order_id": "$orderId"},
+				},
+				{"pipeline", bson.A{bson.D{
+					{"$match", bson.D{
+						{"$expr", bson.D{
+							{"$and", []interface{}{
+								bson.M{"$eq": []string{"$orderDay", "$$order_day"}},
+								bson.M{"$eq": []string{"$orderId", "$$order_id"}},
+								bson.M{"$eq": bson.A{"$state", 7}},
+							}},
+						}},
+					}},
+				}}},
+				{"as", "orderReview"},
+			}},
+		},
+		{{"$unwind", bson.D{{"path", "$orderReview"}}}},
+
+		{{"$match", bson.D{{"orderReview.menu.menuId", meniId}}}},
+		{{"$project", bson.D{
+			{"_id", 0},
+			{"userId", 1},
+			{"star", 1},
+			{"content", 1},
+		},
+		}},
+	}
+	cursor, err := p.reviewCol.Aggregate(context.TODO(), pipeline)
+	if err != nil {
+		log.Error("메뉴 상세 조회 에러: ", err.Error())
+		return nil, err
+	}
+
+	if err = cursor.All(context.TODO(), &bsonResult); err != nil {
+		log.Error("메뉴 상세 조회 에러: ", err.Error())
+		return nil, err
+	}
+	return bsonResult, nil
+}
 func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
 
 	var oldMenu Menu
@@ -442,6 +520,55 @@ func (p *Model) DeleteMenuModel(menuId int) error {
 	return err
 }
 
+func (p *Model) GetInOrderModel(userId int, userType int) (*[]bson.M, error) {
+
+	var orderList []bson.M
+	filter := bson.M{}
+	if userType == 2 {
+		filter = bson.M{"userId": userId}
+	}
+
+	findOptions := options.Find().SetSort(bson.D{{"state", 1}}).SetProjection(bson.D{{"_id", 0}})
+	cursor, err := p.orderCol.Find(context.TODO(), filter, findOptions)
+	if err == mongo.ErrNoDocuments {
+		log.Error("조회 결과 없음", err.Error())
+		return nil, nil
+	} else if err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return nil, err
+	}
+	if err = cursor.All(context.TODO(), &orderList); err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return nil, err
+	}
+
+	return &orderList, err
+}
+
+func (p *Model) GetDoneOrderModel(userId int, userType int) (*[]bson.M, error) {
+
+	var orderList []bson.M
+	filter := bson.M{}
+	if userType == 2 {
+		filter = bson.M{"userId": userId}
+	}
+
+	findOptions := options.Find().SetSort(bson.D{{"createAt", -1}}).SetProjection(bson.D{{"_id", 0}})
+	cursor, err := p.orderSaveCol.Find(context.TODO(), filter, findOptions)
+	if err == mongo.ErrNoDocuments {
+		log.Error("조회 결과 없음", err.Error())
+		return nil, nil
+	} else if err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return nil, err
+	}
+	if err = cursor.All(context.TODO(), &orderList); err != nil {
+		log.Error("오더 조회 에러", err.Error())
+		return nil, err
+	}
+
+	return &orderList, err
+}
 func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
 
 	now := time.Now()
@@ -564,6 +691,24 @@ func (p *Model) UpdateOwnerOrderModel(orderData Order) error {
 		log.Error("오더 상태 수정 에러", err.Error())
 	}
 	return nil
+}
+
+func (p *Model) GetReviewModel(userId int, sortBy string) ([]Review, error) {
+
+	var reviewList []Review
+
+	filter := bson.M{"userId": userId}
+	findOptions := options.Find().SetSort(bson.D{{sortBy, -1}})
+	cursor, err := p.reviewCol.Find(context.TODO(), filter, findOptions)
+	if err != nil {
+		log.Error("리뷰 조회 에러", err.Error())
+		return nil, err
+	}
+	if err = cursor.All(context.TODO(), &reviewList); err != nil {
+		log.Error("리뷰 조회 에러", err.Error())
+		return nil, err
+	}
+	return reviewList, err
 }
 
 func (p *Model) InsertReviewModel(reviewData Review) (*Review, error) {
