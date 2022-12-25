@@ -77,14 +77,104 @@ definitions:
       orderId:
         type: integer
       star:
+        maximum: 5
+        minimum: 0
         type: number
+      userId:
+        type: integer
+    type: object
+  model.User:
+    properties:
+      address:
+        type: string
+      createAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      modifyAt:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      type:
+        type: integer
+      use:
+        type: boolean
       userId:
         type: integer
     type: object
 info:
   contact: {}
 paths:
+  /customer/menu:
+    get:
+      consumes:
+      - application/json
+      description: menu data 조회를 위한 기능.
+      parameters:
+      - description: recommend, star, orderCount, date
+        in: query
+        name: sortBy
+        type: string
+      - description: 리뷰 확인 여부
+        in: query
+        name: checkReview
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Menu'
+            type: array
+      summary: call GetMenuControl, return menu data by []model.Menu
+  /customer/menu/detail:
+    get:
+      consumes:
+      - application/json
+      description: menu data 조회를 위한 기능.
+      parameters:
+      - description: recommend, star, orderCount, date
+        in: header
+        name: menuId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Menu'
+            type: array
+      summary: call GetMenuDetailControl, return menu data by []model.Menu
   /customer/order:
+    get:
+      consumes:
+      - application/json
+      description: order data 조회를 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Order'
+            type: array
+      summary: call GetOrderControl, return order data by []model.Order
     post:
       consumes:
       - application/json
@@ -162,6 +252,30 @@ paths:
           schema:
             type: string
       summary: call DeleteReviewControl, return result by json.
+    get:
+      consumes:
+      - application/json
+      description: review data 확인을 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: 정렬할 컬럼명
+        in: query
+        name: sortBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Review'
+            type: array
+      summary: call GetReviewControl, return result by []model.Review.
     post:
       consumes:
       - application/json
@@ -174,7 +288,7 @@ paths:
         type: string
       - description: '{orderDay, orderId, star, content}'
         in: body
-        name: menu
+        name: review
         required: true
         schema:
           $ref: '#/definitions/model.Review'
@@ -234,6 +348,29 @@ paths:
           schema:
             type: string
       summary: call DeleteMenuControl, return result by json.
+    get:
+      consumes:
+      - application/json
+      description: menu data 조회를 위한 기능.
+      parameters:
+      - description: recommend, star, orderCount, date
+        in: query
+        name: sortBy
+        type: string
+      - description: 리뷰 확인 여부
+        in: query
+        name: checkReview
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Menu'
+            type: array
+      summary: call GetMenuControl, return menu data by []model.Menu
     post:
       consumes:
       - application/json
@@ -287,7 +424,48 @@ paths:
           schema:
             type: string
       summary: call UpdateMenuControl, return result by json.
+  /owner/menu/detail:
+    get:
+      consumes:
+      - application/json
+      description: menu data 조회를 위한 기능.
+      parameters:
+      - description: recommend, star, orderCount, date
+        in: header
+        name: menuId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Menu'
+            type: array
+      summary: call GetMenuDetailControl, return menu data by []model.Menu
   /owner/order:
+    get:
+      consumes:
+      - application/json
+      description: order data 조회를 위한 기능.
+      parameters:
+      - description: User ID
+        in: header
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Order'
+            type: array
+      summary: call GetOrderControl, return order data by []model.Order
     put:
       consumes:
       - application/json
@@ -312,4 +490,24 @@ paths:
           schema:
             type: string
       summary: call UpdateOwnerOrderControl, return result by json.
+  /user:
+    post:
+      consumes:
+      - application/json
+      description: user data 추가를 위한 기능.
+      parameters:
+      - description: '{userId, name, email, phone, address, type}'
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: call InsertUserControl, return menu data by Json.
 swagger: "2.0"

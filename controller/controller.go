@@ -106,9 +106,43 @@ func (p *Controller) ReviewBind(c *gin.Context, review *model.Review) bool {
 	return true
 }
 
+// InsertUserControl godoc
+//
+//	@Summary		call InsertUserControl, return menu data by Json.
+//	@Description	user data 추가를 위한 기능.
+//	@name			InsertUserControl
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body	model.User	true	"{userId, name, email, phone, address, type}"
+//	@Router			/user [post]
+//	@Success		200	{object}	string
+func (p *Controller) InsertUserControl(c *gin.Context) {
+
+	user := model.NewUser()
+
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "유저 정보가 잘못됬습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	userResult, err := p.md.InsertUserModel(user)
+
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "유저를 추가하지 못했습니다!",
+			"error":   err.Error(),
+		})
+		return
+	}
+	c.JSON(200, userResult)
+	return
+}
+
 // GetMenuControl godoc
 //
-//	@Summary		call GetMenuControl, return menu data by []model.Menu.
+//	@Summary		call GetMenuControl, return menu data by []model.Menu
 //	@Description	menu data 조회를 위한 기능.
 //	@name			GetMenuControl
 //	@Accept			json
@@ -117,7 +151,7 @@ func (p *Controller) ReviewBind(c *gin.Context, review *model.Review) bool {
 //	@Param			checkReview	query	int	false	"리뷰 확인 여부"
 //	@Router			/customer/menu [get]
 //	@Router			/owner/menu [get]
-//	@Success		200	{object}	[]primitive.M
+//	@Success		200	{object}	[]model.Menu
 func (p *Controller) GetMenuControl(c *gin.Context) {
 
 	sortBy := c.Query("sortBy")
@@ -142,7 +176,7 @@ func (p *Controller) GetMenuControl(c *gin.Context) {
 
 // GetMenuDetailControl godoc
 //
-//	@Summary		call GetMenuDetailControl, return menu data by model.Menu.
+//	@Summary		call GetMenuDetailControl, return menu data by []model.Menu
 //	@Description	menu data 조회를 위한 기능.
 //	@name			GetMenuControl
 //	@Accept			json
@@ -150,7 +184,7 @@ func (p *Controller) GetMenuControl(c *gin.Context) {
 //	@Param			menuId	header	string	true	"recommend, star, orderCount, date"
 //	@Router			/customer/menu/detail [get]
 //	@Router			/owner/menu/detail [get]
-//	@Success		200	{object}	[]primitive.M
+//	@Success		200	{object}	[]model.Menu
 func (p *Controller) GetMenuDetailControl(c *gin.Context) {
 
 	menuId, _ := strconv.Atoi(c.GetHeader("menuId"))
@@ -281,7 +315,7 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 
 // GetOrderControl godoc
 //
-//	@Summary		call GetOrderControl, return order data by []bson.M
+//	@Summary		call GetOrderControl, return order data by []model.Order
 //	@Description	order data 조회를 위한 기능.
 //	@name			GetOrderControl
 //	@Accept			json
@@ -289,7 +323,7 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Router			/customer/order [get]
 //	@Router			/owner/order [get]
-//	@Success		200	{object}	[]bson.M
+//	@Success		200	{object}	[]model.Order
 func (p *Controller) GetOrderControl(c *gin.Context) {
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
 

@@ -120,6 +120,13 @@ func NewModel(cfg *conf.Config) (*Model, error) {
 	return r, nil
 }
 
+func NewUser() User {
+	return User{
+		Use:      true,
+		CreateAt: time.Now(),
+		ModifyAt: time.Now(),
+	}
+}
 func NewMenu() Menu {
 	return Menu{
 		OrderState:   1,
@@ -343,6 +350,29 @@ func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
 	return nil
 }
 
+func (p *Model) InsertUserModel(userData User) (*User, error) {
+
+	var oldUser User
+	userFindFilter := bson.M{"userId": userData.UserId}
+	if err := p.userCol.FindOne(context.TODO(), userFindFilter).Decode(&oldUser); err == nil {
+		log.Error("이미 유저가 존재합니다.")
+		return nil, errors.New("이미 존재하는 유저")
+	}
+
+	res, err := p.userCol.InsertOne(context.TODO(), userData)
+
+	if err != nil {
+		log.Error("유저 추가 에러", err.Error())
+	}
+
+	var newUser User
+	query := bson.M{"_id": res.InsertedID}
+	if err = p.userCol.FindOne(context.TODO(), query).Decode(&newUser); err != nil {
+		log.Error("유저 추가 후 조회 에러", err.Error())
+		return nil, err
+	}
+	return &newUser, err
+}
 func (p *Model) GetMenuModel(sortBy string, checkReview int) ([]primitive.M, error) {
 
 	var newMenu []primitive.M

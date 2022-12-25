@@ -63,6 +63,8 @@ func (p *Router) Idx() *gin.Engine {
 	e.GET("/swagger/:any", ginSwg.WrapHandler(swgFiles.Handler))
 	docs.SwaggerInfo.Host = "localhost"
 
+	e.POST("/user", p.ct.InsertUserControl) // 처음 환경 초기화시 사용을 위해 추가
+
 	owner := e.Group("owner", liteAuth())
 	{
 		owner.GET("/menu", p.ct.GetMenuControl) // 임시로 GetOk로 연결

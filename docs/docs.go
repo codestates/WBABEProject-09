@@ -16,7 +16,106 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/customer/menu": {
+            "get": {
+                "description": "menu data 조회를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call GetMenuControl, return menu data by []model.Menu",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recommend, star, orderCount, date",
+                        "name": "sortBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "리뷰 확인 여부",
+                        "name": "checkReview",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Menu"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/customer/menu/detail": {
+            "get": {
+                "description": "menu data 조회를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call GetMenuDetailControl, return menu data by []model.Menu",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recommend, star, orderCount, date",
+                        "name": "menuId",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Menu"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/customer/order": {
+            "get": {
+                "description": "order data 조회를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call GetOrderControl, return order data by []model.Order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Order"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "주문자의 order data 수정을 위한 기능.",
                 "consumes": [
@@ -91,6 +190,42 @@ const docTemplate = `{
             }
         },
         "/customer/order/review": {
+            "get": {
+                "description": "review data 확인을 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call GetReviewControl, return result by []model.Review.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "정렬할 컬럼명",
+                        "name": "sortBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Review"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "review data 수정을 위한 기능.",
                 "consumes": [
@@ -146,7 +281,7 @@ const docTemplate = `{
                     },
                     {
                         "description": "{orderDay, orderId, star, content}",
-                        "name": "menu",
+                        "name": "review",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -206,6 +341,41 @@ const docTemplate = `{
             }
         },
         "/owner/menu": {
+            "get": {
+                "description": "menu data 조회를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call GetMenuControl, return menu data by []model.Menu",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recommend, star, orderCount, date",
+                        "name": "sortBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "리뷰 확인 여부",
+                        "name": "checkReview",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Menu"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "menu data 수정을 위한 기능.",
                 "consumes": [
@@ -320,7 +490,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/owner/menu/detail": {
+            "get": {
+                "description": "menu data 조회를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call GetMenuDetailControl, return menu data by []model.Menu",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "recommend, star, orderCount, date",
+                        "name": "menuId",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Menu"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/owner/order": {
+            "get": {
+                "description": "order data 조회를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call GetOrderControl, return order data by []model.Order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.Order"
+                            }
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "오너가 order state 수정을 위한 기능.",
                 "consumes": [
@@ -345,6 +577,37 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/model.Order"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "post": {
+                "description": "user data 추가를 위한 기능.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "call InsertUserControl, return menu data by Json.",
+                "parameters": [
+                    {
+                        "description": "{userId, name, email, phone, address, type}",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
                         }
                     }
                 ],
@@ -478,7 +741,44 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "star": {
-                    "type": "number"
+                    "type": "number",
+                    "maximum": 5,
+                    "minimum": 0
+                },
+                "userId": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.User": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "createAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "modifyAt": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "integer"
+                },
+                "use": {
+                    "type": "boolean"
                 },
                 "userId": {
                     "type": "integer"

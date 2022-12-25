@@ -52,3 +52,364 @@ func TestInsertMenuControl(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, res.StatusCode, string(body))
 }
+
+// 초기 환경 구성시 user, menu, order 기본 데이터를 넣기위한 test
+// 시간 문제로 Review 및 수정 init는 - TODO -
+func TestInitControl(t *testing.T) {
+	userList := []model.User{
+		model.User{
+			UserId:  1,
+			Name:    "김주인",
+			Email:   "email@email.email",
+			Phone:   "01000000000",
+			Address: "서울",
+			Type:    1,
+		},
+		model.User{
+			UserId:  2,
+			Name:    "김손님1",
+			Email:   "email@email.email",
+			Phone:   "01000000000",
+			Address: "서울",
+			Type:    2,
+		},
+		model.User{
+			UserId:  3,
+			Name:    "김손님2",
+			Email:   "email@email.email",
+			Phone:   "01000000000",
+			Address: "서울",
+			Type:    2,
+		},
+	}
+
+	for _, user := range userList {
+
+		jsonValue, _ := json.Marshal(user)
+		req, _ := http.NewRequest("POST", "http://localhost:8080/user", bytes.NewBuffer(jsonValue))
+		req.Header.Set("Content-Type", "application/json")
+
+		client := http.Client{}
+		_, err := client.Do(req)
+		if err != nil {
+			t.Errorf("TestInitControl user Error: %s", err)
+		}
+	}
+
+	menuList := []model.Menu{
+		model.Menu{
+			Category:        "중식",
+			Name:            "짜장면",
+			Price:           5000,
+			Recommend:       true,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "중식",
+			Name:            "짬뽕면",
+			Price:           5000,
+			Recommend:       false,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "중식",
+			Name:            "짬짜면",
+			Price:           5500,
+			Recommend:       true,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "중식",
+			Name:            "탕수육",
+			Price:           10000,
+			Recommend:       false,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "한식",
+			Name:            "김치찌개",
+			Price:           8000,
+			Recommend:       true,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "한식",
+			Name:            "된장찌개",
+			Price:           8000,
+			Recommend:       false,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "한식",
+			Name:            "삼겹살",
+			Price:           15000,
+			Recommend:       true,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "한식",
+			Name:            "부대찌개",
+			Price:           10000,
+			Recommend:       false,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "양식",
+			Name:            "피자",
+			Price:           20000,
+			Recommend:       true,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "양식",
+			Name:            "스테이크",
+			Price:           30000,
+			Recommend:       false,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "양식",
+			Name:            "치킨",
+			Price:           20000,
+			Recommend:       true,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+		model.Menu{
+			Category:        "양식",
+			Name:            "리조또",
+			Price:           15000,
+			Recommend:       false,
+			OrderState:      1,
+			OrderDailyLimit: 5,
+		},
+	}
+
+	for _, menu := range menuList {
+
+		jsonValue, _ := json.Marshal(menu)
+		req, _ := http.NewRequest("POST", "http://localhost:8080/owner/menu", bytes.NewBuffer(jsonValue))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("userId", "1")
+		client := http.Client{}
+		_, err := client.Do(req)
+		if err != nil {
+			t.Errorf("TestInitControl menu Error: %s", err)
+		}
+	}
+
+	orderList := []model.Order{
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 2,
+					Name:   "짬뽕면",
+				},
+				model.OrderMenu{
+					MenuId: 4,
+					Name:   "탕수육",
+				},
+				model.OrderMenu{
+					MenuId: 11,
+					Name:   "치킨",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 5,
+					Name:   "김치찌개",
+				},
+				model.OrderMenu{
+					MenuId: 7,
+					Name:   "삼겹살",
+				},
+				model.OrderMenu{
+					MenuId: 11,
+					Name:   "치킨",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 2,
+					Name:   "짬뽕면",
+				},
+				model.OrderMenu{
+					MenuId: 4,
+					Name:   "탕수육",
+				},
+				model.OrderMenu{
+					MenuId: 11,
+					Name:   "치킨",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 2,
+					Name:   "짬뽕면",
+				},
+				model.OrderMenu{
+					MenuId: 4,
+					Name:   "탕수육",
+				},
+				model.OrderMenu{
+					MenuId: 11,
+					Name:   "치킨",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 2,
+					Name:   "짬뽕면",
+				},
+				model.OrderMenu{
+					MenuId: 7,
+					Name:   "삼겹살",
+				},
+				model.OrderMenu{
+					MenuId: 11,
+					Name:   "치킨",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 2,
+					Name:   "짬뽕면",
+				},
+				model.OrderMenu{
+					MenuId: 5,
+					Name:   "김치찌개",
+				},
+				model.OrderMenu{
+					MenuId: 7,
+					Name:   "삼겹살",
+				},
+				model.OrderMenu{
+					MenuId: 11,
+					Name:   "치킨",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 2,
+					Name:   "짬뽕면",
+				},
+				model.OrderMenu{
+					MenuId: 4,
+					Name:   "탕수육",
+				},
+				model.OrderMenu{
+					MenuId: 5,
+					Name:   "김치찌개",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+		model.Order{
+			UserId: 2,
+			Menu: []model.OrderMenu{
+				model.OrderMenu{
+					MenuId: 1,
+					Name:   "짜장면",
+				},
+				model.OrderMenu{
+					MenuId: 2,
+					Name:   "짬뽕면",
+				},
+				model.OrderMenu{
+					MenuId: 4,
+					Name:   "탕수육",
+				},
+				model.OrderMenu{
+					MenuId: 11,
+					Name:   "치킨",
+				},
+			},
+			Phone:   "01000000000",
+			Address: "서울",
+		},
+	}
+
+	for _, order := range orderList {
+
+		jsonValue, _ := json.Marshal(order)
+		req, _ := http.NewRequest("POST", "http://localhost:8080/customer/order", bytes.NewBuffer(jsonValue))
+		req.Header.Set("userId", "2")
+		req.Header.Set("Content-Type", "application/json")
+
+		client := http.Client{}
+		_, err := client.Do(req)
+		if err != nil {
+			t.Errorf("TestInitControl order Error: %s", err)
+		}
+	}
+}
