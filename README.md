@@ -77,67 +77,81 @@ mongoDB: 도큐먼트 지향 데이터베이스 시스템
 ## 기능소개
 
 ![Go-order](https://user-images.githubusercontent.com/25821827/209678234-2cb03ddb-6505-4d4d-b200-4eb6bc9746df.png)
-API 테스트를 위해 Talend API Tester를 사용했으며, 테스트 내역을 Talend API Tester.json 파일로 저장함
+API 테스트를 위해 Talend API Tester를 사용했으며, 테스트 내역을 Talend API Tester.json 파일로 저장함  
 Import를 통해서 테스트 환경 복사 가능
 
 ### customer/menu[GET]
 
+주문자가 메뉴를 확인하기 위한 API
 ![customer/menu(get)1](https://user-images.githubusercontent.com/25821827/209779935-471418c5-63e3-4d7f-a80f-24bd709106ee.png)
 ![customer/menu(get)2](https://user-images.githubusercontent.com/25821827/209780015-b52896a2-5247-4e8f-8fbd-01acdd9d671c.png)
 
 ### owner/menu[POST]
 
+피주문자가 메뉴를 등록하기 위한 API
 ![owner/menu(post)1](https://user-images.githubusercontent.com/25821827/209780138-2f90b787-78db-417c-a586-c08a2e9ed80a.png)
 ![owner/menu(post)2](https://user-images.githubusercontent.com/25821827/209780220-4da4e733-161a-43fa-bc07-136880354cd5.png)
 
 ### owner/menu[PUT]
 
+피주문자가 메뉴를 확인하기 위한 API
 ![owner/menu(put)1](https://user-images.githubusercontent.com/25821827/209780278-af8fa337-2356-4cfd-911d-3a0b14e473bb.png)
 ![owner/menu(put)2](https://user-images.githubusercontent.com/25821827/209780349-38ac8339-f2f6-4a95-8571-e48d85006556.png)
 
 ### owner/menu[DELETE]
 
+피주문자가 메뉴를 삭제하기 위한 API
 ![owner/menu(delete)](https://user-images.githubusercontent.com/25821827/209780494-1b979cc5-dd21-45ee-9dfa-834820cb84d0.png)
 
 ### customer/order[GET]
 
+주문자가 오더를 조회하기 위한 API
 ![customer/order(get)](https://user-images.githubusercontent.com/25821827/209780639-5edec64a-d11a-4691-9885-924b5276d9d8.png)
 
 ### customer/order[POST]
 
+주문자가 오더를 추가하기 위한 API
 ![customer/order(post)](https://user-images.githubusercontent.com/25821827/209780724-0fbe3867-0ff2-44bc-82e2-0a37ecfe5a33.png)
 
 ### customer/order[PUT]
 
+주문자가 오더를 수정하기 위한 API
 ![customer/order(put)](https://user-images.githubusercontent.com/25821827/209780851-8643a4cc-9bcf-4fcb-88ba-c905261da3ee.png)
 
 ### owner/order[GET]
 
+피주문자가 오더를 조회하기 위한 API
 ![owner/order(get)](https://user-images.githubusercontent.com/25821827/209780990-6febb612-69c6-4b19-aebd-75ef89291303.png)
 
 ### owner/order[PUT]
 
+피주문자가 오더상태를 수정하기 위한 API
 ![owner/order(put)](https://user-images.githubusercontent.com/25821827/209781060-d0c65b2b-d4ac-46e4-b577-21852b277a84.png)
 
 ### customer/order/review[GET]
 
+주문자가 자신의 오더에 리뷰를 가져오기 위한 API
 ![customer/order/review(get)](https://user-images.githubusercontent.com/25821827/209781122-ff146d1c-7ed3-44ca-9b7a-670e1c3a7a89.png)
 
 ### customer/order/review[POST]
 
+주문자가 자신의 오더에 리뷰를 추가하기 위한 API
 ![customer/order/review(post)1](https://user-images.githubusercontent.com/25821827/209781196-e2027cec-f23d-4db2-bf80-39b240088ca0.png)
 ![customer/order/review(post)2](https://user-images.githubusercontent.com/25821827/209781251-f03362b0-747a-4aea-b878-f0a138cae2c5.png)
 
 ### customer/order/review[PUT]
 
+주문자가 자신의 오더에 리뷰를 수정하기 위한 API
 ![customer/order/review(put)](https://user-images.githubusercontent.com/25821827/209781327-d25de74a-a147-4d6a-989d-de11520b979c.png)
 
 ### owner/menu/detail[GET]
 
+피주문자가 메뉴의 리뷰들을 확인하기 위한 API
 ![owner/menu/detail(get)](https://user-images.githubusercontent.com/25821827/209781446-867f4b67-714d-431b-8044-a08966ef8c6e.png)
 
 ### user[POST]
 
+API 사용을 위한 유저를 추가하는 API
 ![user(post)1](https://user-images.githubusercontent.com/25821827/209782904-69c54250-8c77-488d-8079-6b92ba99d015.png)
 ![user(post)2](https://user-images.githubusercontent.com/25821827/209782937-ac397a0d-65a8-4e49-ba47-b9150776c210.png)
 

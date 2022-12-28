@@ -608,6 +608,7 @@ func (p *Model) GetInOrderModel(userId int, userType int) (*[]bson.M, error) {
 	return &orderList, err
 }
 
+// - TODO - 버그존재, 완료 오더에 state 7 조건 넣어야함
 func (p *Model) GetDoneOrderModel(userId int, userType int) (*[]bson.M, error) {
 
 	var orderList []bson.M
