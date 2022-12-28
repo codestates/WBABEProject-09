@@ -139,7 +139,7 @@ paths:
       - application/json
       description: menu data 조회를 위한 기능.
       parameters:
-      - description: recommend, star, orderCount, date
+      - description: Menu Id
         in: header
         name: menuId
         required: true
@@ -430,7 +430,7 @@ paths:
       - application/json
       description: menu data 조회를 위한 기능.
       parameters:
-      - description: recommend, star, orderCount, date
+      - description: Menu Id
         in: header
         name: menuId
         required: true

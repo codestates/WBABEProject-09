@@ -66,7 +66,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "recommend, star, orderCount, date",
+                        "description": "Menu Id",
                         "name": "menuId",
                         "in": "header",
                         "required": true
@@ -503,7 +503,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "recommend, star, orderCount, date",
+                        "description": "Menu Id",
                         "name": "menuId",
                         "in": "header",
                         "required": true
