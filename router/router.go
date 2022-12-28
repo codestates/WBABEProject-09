@@ -61,7 +61,7 @@ func (p *Router) Idx() *gin.Engine {
 	e.Use(CORS())
 	//swagger 핸들러 미들웨어에 등록
 	e.GET("/swagger/:any", ginSwg.WrapHandler(swgFiles.Handler))
-	docs.SwaggerInfo.Host = "localhost"
+	docs.SwaggerInfo.Host = "localhost:8080"
 
 	e.POST("/user", p.ct.InsertUserControl) // 처음 환경 초기화시 사용을 위해 추가
 
