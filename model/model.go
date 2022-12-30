@@ -134,6 +134,9 @@ func NewUser() User {
 		Use:      true,
 		CreateAt: time.Now(),
 		ModifyAt: time.Now(),
+		/* [코드리뷰]
+		 * time.Now()의 시점을 하나의 시점으로 명시한 뒤, 해당 값을 사용해주시는 방법을 추천드립니다.
+		 */
 	}
 }
 func NewMenu() Menu {
