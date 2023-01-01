@@ -58,6 +58,27 @@ func (p *Controller) UserValidation(c *gin.Context, targetUserType int, userId i
 	}
 
 	return true
+
+
+	/* [코드리뷰]
+	 * UserValidation을 위한 용도의 function을 잘 만들어주셨습니다.
+	 * Validation에 대한 간단한 메세지 들이 많이 발생하고 있네요. 전반적으로 대략 23~25개정도로 보여집니다.
+	 * 에러에 대한 메세지도 많아지면, 관리하는 부분도 하나의 map 함수의 key, value로 관리하면 보다 용이할 것으로 보여집니다.
+	 * 대신 mapping되는 string 타입의 key 값이 상황이 잘 설명되는 naming convention이 있으면 깔끔해지겠지요.
+	 *
+	 * 두번째로 코딩스타일과 관련된 부분입니다.
+	 * return 되는 부분이 하나의 function 안에 여러 곳에서 발생하고 있습니다.
+	 * 이 부분을 처음에 value를 하나 선언하고 이후에 값을 initialize 시켜주는 방식으로 변경하면 
+	 * 나중에 코드 관리하기가 더욱 수월해집니다.
+	 * to-be:
+	 var value bool = true
+	 if case{
+		value = false
+	 } else if{
+		value = false
+	 }
+	 return value
+	 */
 }
 
 // menu ID에 대한 유효성 검사를 공통적으로 수행하기 위해 선언

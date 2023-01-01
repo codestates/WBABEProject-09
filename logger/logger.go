@@ -72,6 +72,11 @@ func Warn(ctx ...interface{}) {
 func Error(ctx ...interface{}) {
 	logging("error", ctx)
 }
+/* [코드리뷰]
+ * 로그 레벨을 잘 나누어 주셨습니다.
+ * zap은 Debug, Info, Warning, Error, DPanic, Panic, and Fatal 총 7가지 디버깅 레벨을 제공해줍니다.
+ * 사용되지 않지만, 해당 레벨들을 모두 구현해놓으면, 이후에 추가하는 일이 적어질 것 같습니다.
+ */
 
 // encoder 옵션 설정
 func getEncoder() zapcore.Encoder {
