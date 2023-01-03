@@ -24,3 +24,10 @@ func GetMenuStateText(menuState int) string {
 
 	return returnString
 }
+
+func GetMenuTypeText() map[int]string {
+	return map[int]string{
+		1: "판매중",
+		2: "판매불가",
+	}
+}

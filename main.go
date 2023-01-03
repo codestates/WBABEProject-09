@@ -24,10 +24,6 @@ var (
 
 func main() {
 	var configFlag = flag.String("config", "./config/config.toml", "toml file to use for configuration")
-	/* [코드리뷰]
-	 * 시스템과 관련된 config를 main 함수 첫번째에서 잘 가져와 주셨습니다.
-	 * command 라인에서 config를 별도로 지정하여 환경에 따라 다른 시스템을 다르게 실행할 수 있게된 좋은 코드입니다.
-	 */
 	flag.Parse()
 
 	// controller와 model이 한개의 파일로 구성됨, order, menu, 주문자, 피주문자 등으로 나눠서 관리가 필요함 - TODO -
@@ -38,7 +34,7 @@ func main() {
 	} else if err := log.InitLogger(cf); err != nil { // logger 모듈 설정
 		fmt.Printf("init logger failed, err:%v\n", err)
 		return
-	} else if mod, err := md.NewModel(cf); err != nil {
+	} else if mod, err := md.NewModel(cf); err != nil { // model 모듈 설정
 		fmt.Printf("NewModel Error: %v\n", err)
 	} else if controller, err := ctl.NewCTL(mod); err != nil { //controller 모듈 설정
 		fmt.Printf("NewCTL Error: %v\n", err)

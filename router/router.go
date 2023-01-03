@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"os"
 
 	ctl "WBABEProject-09/controller"
 	"WBABEProject-09/docs"
@@ -52,8 +53,16 @@ func liteAuth() gin.HandlerFunc {
 
 // 실제 라우팅
 func (p *Router) Idx() *gin.Engine {
+	serverMode := os.Getenv("WBABEProjectMode")
+	if serverMode == "dev" {
+		gin.SetMode(gin.DebugMode)
+	} else if serverMode == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		panic("WBABEProjectMode 환경변수 설정이 필요합니다!(router 참조)")
+	}
+	fmt.Printf("server mode: %s \n", serverMode)
 	e := gin.New()
-
 	e.Use(gin.Logger())
 	e.Use(gin.Recovery())
 	e.Use(logger.GinLogger())
@@ -63,7 +72,8 @@ func (p *Router) Idx() *gin.Engine {
 	e.GET("/swagger/:any", ginSwg.WrapHandler(swgFiles.Handler))
 	docs.SwaggerInfo.Host = "localhost:8080"
 
-	e.POST("/user", p.ct.InsertUserControl) // 처음 환경 초기화시 사용을 위해 추가
+	e.POST("/user", p.ct.InsertUserControl) // 유저 등록 주소로 처음 환경 초기화시 사용을 위해 추가
+	e.POST("/test", p.ct.TestControl)       // 일부 작은 단위의 기능을 테스트하기 위한 주소로 swagger에 등록하지 않음
 
 	owner := e.Group("owner", liteAuth())
 	{
@@ -77,9 +87,9 @@ func (p *Router) Idx() *gin.Engine {
 		owner.PUT("/order", p.ct.UpdateOwnerOrderControl) // 오더 상태 수정
 	}
 	/* [코드리뷰]
-	 * Group을 사용하여 API 성격에 따라 request를 관리하는 코드는 매우 좋은 코드입니다.
-     * 일반적으로 현업에서도 이와 같은 코드를 자주 사용합니다. 훌륭합니다.
-	 */
+		 * Group을 사용하여 API 성격에 따라 request를 관리하는 코드는 매우 좋은 코드입니다.
+	     * 일반적으로 현업에서도 이와 같은 코드를 자주 사용합니다. 훌륭합니다.
+	*/
 
 	customer := e.Group("customer", liteAuth())
 	{
