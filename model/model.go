@@ -76,19 +76,7 @@ type Review struct {
 	ModifyAt time.Time           `json:"modifyAt" bson:"modifyAt"`
 }
 
-// Review와 Menu에 Star를 float32 처리를 했었지만, 저장시 다음과 같이 변화됨
-// 3.1 => 3.0999999046325684
-// go에 float32와 mongo의 Double 차이라고 판단되어 float64로 변경
-
-/* [코드리뷰]
- * 코드에서 히스토리를 명시해주셔서, 이후 개발할 때 동일한 실수를 하지 않을 것입니다.
- * float32 -> float64로 변경이 이루어졌다는 히스토리를 개발에 명시하는 것은 
- * 이후 자신이 아닌 다른 시스템 담당자가 코드를 볼 때, 매우 도움이 되는 일이지만,
- * 주문관리 시스템이 실제 오픈이 예정인 시스템이고, LTS를 거쳐 이후 계속적으로 시스템을 운영해야 하는 상황이라면,
- * 해당 내용을 wiki나 특정 폴더 혹은 파일에 함께 모아서 관리하는 것을 추천드립니다.
- * history는 중요한 자산이 때문에, 관리하는 것이 좋습니다. 
- * 하나의 공간(파일, web page, etc..)에서 관리해도 좋지 않을까 싶습니다.
- */
+// 타입 변동사항은 이슈 #4 참조
 type Menu struct {
 	Id              *primitive.ObjectID `bson:"_id,omitempty"`
 	MenuId          int                 `json:"menuId" bson:"menuId"`
@@ -130,38 +118,39 @@ func NewModel(cfg *conf.Config) (*Model, error) {
 }
 
 func NewUser() User {
+	var dateNow = time.Now()
 	return User{
 		Use:      true,
-		CreateAt: time.Now(),
-		ModifyAt: time.Now(),
-		/* [코드리뷰]
-		 * time.Now()의 시점을 하나의 시점으로 명시한 뒤, 해당 값을 사용해주시는 방법을 추천드립니다.
-		 */
+		CreateAt: dateNow,
+		ModifyAt: dateNow,
 	}
 }
 func NewMenu() Menu {
+	var dateNow = time.Now()
 	return Menu{
 		OrderState:   1,
 		OrderCount:   0,
 		Star:         0,
 		ReorderCount: 0,
 		Use:          true,
-		CreateAt:     time.Now(),
-		ModifyAt:     time.Now(),
+		CreateAt:     dateNow,
+		ModifyAt:     dateNow,
 	}
 }
 func NewOrder() Order {
+	var dateNow = time.Now()
 	return Order{
 		State:    ot.StateReceiving,
-		CreateAt: time.Now(),
-		ModifyAt: time.Now(),
+		CreateAt: dateNow,
+		ModifyAt: dateNow,
 	}
 }
 
 func NewReview() Review {
+	var dateNow = time.Now()
 	return Review{
-		CreateAt: time.Now(),
-		ModifyAt: time.Now(),
+		CreateAt: dateNow,
+		ModifyAt: dateNow,
 	}
 }
 
