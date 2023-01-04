@@ -299,6 +299,26 @@ func (p *Model) CheckOrderMenuModel(orderData *Order) error {
 	return nil
 }
 
+// 상단에 주문한 메뉴를 검사하는 기능이 존재하지만, 검증은 주문전에 해야함
+// 메뉴 상태에 영향을 미치는 로직은 주문 후에 진행되야함
+// 현재는 반복문이 2번 돌더라도, 직관적으로 진행
+func (p *Model) CheckOrderMenuDeletedModel(orderData *Order) error {
+
+	for _, orderMenuData := range orderData.Menu {
+
+		filter := bson.M{"menuId": orderMenuData.MenuId, "use": true}
+		findOpt := options.FindOne()
+		var findResult bson.M
+		// 배달 완료로 별도에 orderSave 콜렉션에 저장된 과거 주문 내역을 참조
+		err := p.menuCol.FindOne(context.TODO(), filter, findOpt).Decode(&findResult)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+	}
+	return nil
+}
+
 // 리뷰 추가시 연계된 메뉴들에 대해서 계산해 업데이트 위한 함수
 func (p *Model) UpdateMenuReviewStarModel(orderData *Order) error {
 
@@ -639,6 +659,12 @@ func (p *Model) GetDoneOrderModel(userId int, userType int) (*[]bson.M, error) {
 	return &orderList, err
 }
 func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
+
+	err := p.CheckOrderMenuDeletedModel(&orderData)
+	if err != nil {
+		log.Error("오더 추가 에러, 메뉴 조회 실패", err.Error())
+		return &orderData, err
+	}
 
 	now := time.Now()
 	day := now.Format("2006-01-02")
