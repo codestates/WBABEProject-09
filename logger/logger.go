@@ -43,40 +43,48 @@ func InitLogger(cfg *conf.Config) (err error) {
 	return
 }
 
-func logging(logType string, ctx []interface{}) {
+func loggingData(ctx []interface{}) zapcore.Field {
 	var b bytes.Buffer
 	for _, str := range ctx {
 		b.WriteString(str.(string))
 		b.WriteString(" ")
 	}
-
-	lg.Debug(logType, zap.String("-", b.String()))
+	return zap.String("-", b.String())
 
 }
-
 func Debug(ctx ...interface{}) {
-	logging("debug", ctx)
+	lg.Debug("debug", loggingData(ctx))
 }
 
 // Info is a convenient alias for Root().Info
 func Info(ctx ...interface{}) {
-	logging("info", ctx)
+	lg.Info("info", loggingData(ctx))
 }
 
 // Warn is a convenient alias for Root().Warn
 func Warn(ctx ...interface{}) {
-	logging("warn", ctx)
+	lg.Warn("warn", loggingData(ctx))
 }
 
 // Error is a convenient alias for Root().Error
 func Error(ctx ...interface{}) {
-	logging("error", ctx)
+	lg.Error("error", loggingData(ctx))
 }
-/* [코드리뷰]
- * 로그 레벨을 잘 나누어 주셨습니다.
- * zap은 Debug, Info, Warning, Error, DPanic, Panic, and Fatal 총 7가지 디버깅 레벨을 제공해줍니다.
- * 사용되지 않지만, 해당 레벨들을 모두 구현해놓으면, 이후에 추가하는 일이 적어질 것 같습니다.
- */
+
+// DPanic is a convenient alias for Root().Error
+func DPanic(ctx ...interface{}) {
+	lg.DPanic("dPanic", loggingData(ctx))
+}
+
+// Panic is a convenient alias for Root().Error
+func Panic(ctx ...interface{}) {
+	lg.Panic("panic", loggingData(ctx))
+}
+
+// Fatal is a convenient alias for Root().Error
+func Fatal(ctx ...interface{}) {
+	lg.Fatal("fatal", loggingData(ctx))
+}
 
 // encoder 옵션 설정
 func getEncoder() zapcore.Encoder {
