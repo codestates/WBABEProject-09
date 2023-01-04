@@ -651,6 +651,6 @@ func (p *Controller) DeleteReviewControl(c *gin.Context) {
 
 // 단순 기능 테스트를 위한 controller
 func (p *Controller) TestControl(c *gin.Context) {
-	fmt.Println(mt.GetMenuTypeText())
+	fmt.Println(mt.GetMenuStateText(1))
 	return
 }
