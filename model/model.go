@@ -432,10 +432,12 @@ func (p *Model) GetMenuModel(sortBy string, checkReview int) ([]primitive.M, err
 		// 이 부분은 1차 피드백 후 2차에서 다시 작업 예정
 		// - TODO - 설계 다시하기
 	} else {
+		// 삭제된 메뉴에 경우 표시하지 않음
+		filter := bson.M{"use": true}
 		// switch 문으로 분기 처리를 했었지만, 잘못된 데이터가 들어와도 기본 정렬이 됨
 		// sortBy에 제대로만 입력했으면 정렬은 맞춰서 되도록 SetSort 1줄로 줄임
 		findOptions := options.Find().SetSort(bson.D{{Key: sortBy, Value: -1}})
-		cursor, err := p.menuCol.Find(context.TODO(), bson.D{}, findOptions)
+		cursor, err := p.menuCol.Find(context.TODO(), filter, findOptions)
 		if err != nil {
 			log.Error("메뉴 조회 에러", err.Error())
 			return nil, err
@@ -500,7 +502,7 @@ func (p *Model) GetMenuDetailModel(meniId int) ([]bson.M, error) {
 func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
 
 	var oldMenu Menu
-	menuFindFilter := bson.M{"category": menuData.Category, "name": menuData.Name}
+	menuFindFilter := bson.M{"category": menuData.Category, "name": menuData.Name, "use": true}
 	if err := p.menuCol.FindOne(context.TODO(), menuFindFilter).Decode(&oldMenu); err == nil {
 		log.Error("이미 메뉴가 존재합니다.")
 		return nil, errors.New("이미 존재하는 메뉴")
@@ -534,7 +536,7 @@ func (p *Model) InsertMenuModel(menuData Menu) (*Menu, error) {
 func (p *Model) UpdateMenuModel(menuId int, menuData Menu) error {
 
 	var oldMenu Menu
-	findFilter := bson.M{"menuId": menuId}
+	findFilter := bson.M{"menuId": menuId, "use": true}
 	if err := p.menuCol.FindOne(context.TODO(), findFilter).Decode(&oldMenu); err != nil {
 		log.Error("메뉴 조회 에러", err.Error())
 		return err
