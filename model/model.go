@@ -610,13 +610,12 @@ func (p *Model) GetInOrderModel(userId int, userType int) (*[]bson.M, error) {
 	return &orderList, err
 }
 
-// - TODO - 버그존재, 완료 오더에 state 7 조건 넣어야함
 func (p *Model) GetDoneOrderModel(userId int, userType int) (*[]bson.M, error) {
 
 	var orderList []bson.M
-	filter := bson.M{}
+	filter := bson.D{bson.E{Key: "state", Value: ot.StateDelivered}}
 	if userType == 2 {
-		filter = bson.M{"userId": userId}
+		filter = append(filter, bson.E{Key: "userId", Value: userId})
 	}
 
 	findOptions := options.Find().SetSort(
