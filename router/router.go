@@ -53,6 +53,8 @@ func liteAuth() gin.HandlerFunc {
 
 // 실제 라우팅
 func (p *Router) Idx() *gin.Engine {
+	// 초기 설치시 환경변수 설정 필요(dev 또는 release)
+	// os.Setenv("WBABEProjectMode","dev")
 	serverMode := os.Getenv("WBABEProjectMode")
 	if serverMode == "dev" {
 		gin.SetMode(gin.DebugMode)
