@@ -2,6 +2,7 @@ package controller
 
 import (
 	"WBABEProject-09/model"
+	et "WBABEProject-09/type/error"
 	mt "WBABEProject-09/type/menu"
 	ut "WBABEProject-09/type/user"
 	"fmt"
@@ -37,96 +38,78 @@ func (p *Controller) CheckUser(userId int) (int, error) {
 // user ID 및 Type에대한 유효성 검사를 공통적으로 수행하기 위해 선언
 func (p *Controller) UserValidation(c *gin.Context, targetUserType int, userId int) bool {
 
+	var resultValue bool = true
 	if userId == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "user ID가 유효하지 않습니다",
+			"message": et.GetErrorMessageText(et.UserValidationID),
 		})
-		return false
+		resultValue = false
 	}
 	userType, err := p.CheckUser(userId)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저 정보를 확인할 수 없습니다!",
+			"message": et.GetErrorMessageText(et.UserControllerSearch),
 			"error":   err.Error(),
 		})
-		return false
+		resultValue = false
 	} else if userType != targetUserType {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message":  "유저 타입이 일치하지 않습니다!",
+			"message":  et.GetErrorMessageText(et.UserValidationType),
 			"userType": ut.GetUserTypeText(userType),
 		})
-		return false
+		resultValue = false
 	}
 
-	return true
-
-	/* [코드리뷰]
-	 * UserValidation을 위한 용도의 function을 잘 만들어주셨습니다.
-	 * Validation에 대한 간단한 메세지 들이 많이 발생하고 있네요. 전반적으로 대략 23~25개정도로 보여집니다.
-	 * 에러에 대한 메세지도 많아지면, 관리하는 부분도 하나의 map 함수의 key, value로 관리하면 보다 용이할 것으로 보여집니다.
-	 * 대신 mapping되는 string 타입의 key 값이 상황이 잘 설명되는 naming convention이 있으면 깔끔해지겠지요.
-	 *
-	 * 두번째로 코딩스타일과 관련된 부분입니다.
-	 * return 되는 부분이 하나의 function 안에 여러 곳에서 발생하고 있습니다.
-	 * 이 부분을 처음에 value를 하나 선언하고 이후에 값을 initialize 시켜주는 방식으로 변경하면
-	 * 나중에 코드 관리하기가 더욱 수월해집니다.
-	 * to-be:
-	 var value bool = true
-	 if case{
-		value = false
-	 } else if{
-		value = false
-	 }
-	 return value
-	*/
+	return resultValue
 }
 
 // menu ID에 대한 유효성 검사를 공통적으로 수행하기 위해 선언
 func (p *Controller) MenuValidation(c *gin.Context, menuId int) bool {
+	var resultValue bool = true
 	if menuId == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "menu ID가 유효하지 않습니다",
+			"message": et.GetErrorMessageText(et.MenuValidationID),
 		})
-		return false
+		resultValue = false
 	}
 
-	return true
+	return resultValue
 }
 
 // menu 관련 controller에서 사용되는 Bind이 중복되기에 별도로 분리
 func (p *Controller) MenuBind(c *gin.Context, menu *model.Menu) bool {
-
+	var resultValue bool = true
 	if err := c.ShouldBindJSON(&menu); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴 정보가 잘못됬습니다!",
+			"message": et.GetErrorMessageText(et.MenuValidation),
 			"error":   err.Error(),
 		})
-		return false
+		resultValue = false
 	}
-	return true
+	return resultValue
 }
 
 func (p *Controller) OrderBind(c *gin.Context, order *model.Order) bool {
-
+	var resultValue bool = true
 	if err := c.ShouldBindJSON(&order); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "오더 정보가 잘못됬습니다!",
+			"message": et.GetErrorMessageText(et.OrderValidation),
 			"error":   err.Error(),
 		})
-		return false
+		resultValue = false
 	}
-	return true
+	return resultValue
 }
 func (p *Controller) ReviewBind(c *gin.Context, review *model.Review) bool {
-
+	var resultValue bool = true
 	if err := c.ShouldBindJSON(&review); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "리뷰 정보가 잘못됬습니다!",
+			"message": et.GetErrorMessageText(et.ReviewValidation),
 			"error":   err.Error(),
 		})
-		return false
+		resultValue = false
 	}
-	return true
+	return resultValue
 }
 
 // InsertUserControl godoc
@@ -145,7 +128,7 @@ func (p *Controller) InsertUserControl(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저 정보가 잘못됬습니다!",
+			"message": et.GetErrorMessageText(et.UserValidation),
 			"error":   err.Error(),
 		})
 		return
@@ -154,7 +137,7 @@ func (p *Controller) InsertUserControl(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저를 추가하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.UserControllerInsert),
 			"error":   err.Error(),
 		})
 		return
@@ -187,7 +170,7 @@ func (p *Controller) GetMenuControl(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴를 검색하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.MenuControllerSearch),
 			"error":   err.Error(),
 		})
 		return
@@ -217,7 +200,7 @@ func (p *Controller) GetMenuDetailControl(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴를 검색하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.MenuControllerSearch),
 			"error":   err.Error(),
 		})
 		return
@@ -252,7 +235,7 @@ func (p *Controller) InsertMenuControl(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴를 추가하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.MenuControllerInsert),
 			"error":   err.Error(),
 		})
 		return
@@ -292,7 +275,7 @@ func (p *Controller) UpdateMenuControl(c *gin.Context) {
 
 	if err := p.md.UpdateMenuModel(menuId, menu); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴를 수정하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.MenuControllerUpdate),
 			"error":   err.Error(),
 		})
 		return
@@ -326,7 +309,7 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 
 	if err := p.md.DeleteMenuModel(menuId); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "메뉴를 삭제하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.MenuControllerDelete),
 			"error":   err.Error(),
 		})
 		return
@@ -351,14 +334,14 @@ func (p *Controller) GetOrderControl(c *gin.Context) {
 
 	if userId == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "user ID가 유효하지 않습니다",
+			"message": et.GetErrorMessageText(et.UserValidationID),
 		})
 		return
 	}
 	userType, err := p.CheckUser(userId)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "유저 정보를 확인할 수 없습니다!",
+			"message": et.GetErrorMessageText(et.UserControllerSearch),
 			"error":   err.Error(),
 		})
 		return
@@ -369,7 +352,7 @@ func (p *Controller) GetOrderControl(c *gin.Context) {
 
 	if inOrderErr != nil || doneOrderErr != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "오더를 검색하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.OrderControllerSearch),
 			"error":   err.Error(),
 		})
 		return
@@ -408,7 +391,7 @@ func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "오더를 추가하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.OrderControllerInsert),
 			"error":   err.Error(),
 		})
 		return
@@ -445,7 +428,7 @@ func (p *Controller) UpdateCustomerOrderControl(c *gin.Context) {
 
 	if err := p.md.UpdateCustomerOrderModel(order); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "오더를 수정하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.OrderControllerUpdate),
 			"error":   err.Error(),
 		})
 		return
@@ -481,7 +464,7 @@ func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
 
 	if err := p.md.UpdateOwnerOrderModel(order); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "오더 상태를 수정하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.OrderControllerUpdate),
 			"error":   err.Error(),
 		})
 		return
@@ -519,7 +502,7 @@ func (p *Controller) GetReviewControl(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "리뷰를 조회하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.ReviewControllerSearch),
 			"error":   err.Error(),
 		})
 		return
@@ -557,7 +540,7 @@ func (p *Controller) InsertReviewControl(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "리뷰를 추가하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.ReviewControllerInsert),
 			"error":   err.Error(),
 		})
 		return
@@ -593,7 +576,7 @@ func (p *Controller) UpdateReviewControl(c *gin.Context) {
 
 	if err := p.md.UpdateReviewModel(review); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "리뷰를 수정하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.ReviewControllerUpdate),
 			"error":   err.Error(),
 		})
 		return
@@ -629,7 +612,7 @@ func (p *Controller) DeleteReviewControl(c *gin.Context) {
 
 	if orderDay == "" || orderId == 0 {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message":  "삭제 정보가 잘못됬습니다!",
+			"message":  et.GetErrorMessageText(et.ReviewValidation),
 			"orderDay": orderDay,
 			"orderId":  orderId,
 		})
@@ -640,7 +623,7 @@ func (p *Controller) DeleteReviewControl(c *gin.Context) {
 	review.OrderId = orderId
 	if err := p.md.DeleteReviewModel(review); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"message": "리뷰를 삭제하지 못했습니다!",
+			"message": et.GetErrorMessageText(et.ReviewControllerDelete),
 			"error":   err.Error(),
 		})
 		return
@@ -651,6 +634,6 @@ func (p *Controller) DeleteReviewControl(c *gin.Context) {
 
 // 단순 기능 테스트를 위한 controller
 func (p *Controller) TestControl(c *gin.Context) {
-	fmt.Println(mt.GetMenuStateText(1))
+	fmt.Println(mt.GetMenuStateText(22))
 	return
 }
