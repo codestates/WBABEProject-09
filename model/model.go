@@ -117,41 +117,33 @@ func NewModel(cfg *conf.Config) (*Model, error) {
 	return r, nil
 }
 
-func NewUser() User {
+func NewUser(user *User) {
 	var dateNow = time.Now()
-	return User{
-		Use:      true,
-		CreateAt: dateNow,
-		ModifyAt: dateNow,
-	}
+	user.Use = true
+	user.CreateAt = dateNow
+	user.ModifyAt = dateNow
 }
-func NewMenu() Menu {
+func NewMenu(menu *Menu) {
 	var dateNow = time.Now()
-	return Menu{
-		OrderState:   1,
-		OrderCount:   0,
-		Star:         0,
-		ReorderCount: 0,
-		Use:          true,
-		CreateAt:     dateNow,
-		ModifyAt:     dateNow,
-	}
+	menu.OrderState = 1
+	menu.OrderCount = 0
+	menu.Star = 0
+	menu.ReorderCount = 0
+	menu.Use = true
+	menu.CreateAt = dateNow
+	menu.ModifyAt = dateNow
 }
-func NewOrder() Order {
+func NewOrder(order *Order) {
 	var dateNow = time.Now()
-	return Order{
-		State:    ot.StateReceiving,
-		CreateAt: dateNow,
-		ModifyAt: dateNow,
-	}
+	order.State = ot.StateReceiving
+	order.CreateAt = dateNow
+	order.ModifyAt = dateNow
 }
 
-func NewReview() Review {
+func NewReview(review *Review) {
 	var dateNow = time.Now()
-	return Review{
-		CreateAt: dateNow,
-		ModifyAt: dateNow,
-	}
+	review.CreateAt = dateNow
+	review.ModifyAt = dateNow
 }
 
 // auto-increment ID를 활용하기 위해 만든 시퀀스

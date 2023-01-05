@@ -124,7 +124,7 @@ func (p *Controller) ReviewBind(c *gin.Context, review *model.Review) bool {
 //	@Success		200	{object}	string
 func (p *Controller) InsertUserControl(c *gin.Context) {
 
-	user := model.NewUser()
+	user := model.User{}
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -133,6 +133,10 @@ func (p *Controller) InsertUserControl(c *gin.Context) {
 		})
 		return
 	}
+	// 초기 데이터 셋팅은 사용자 데이터가 도착한 이후에 진행
+	// 사용자가 의도적으로 flag 값을 넣어서 보내는 것을 방지하기 위함
+	model.NewUser(&user)
+
 	userResult, err := p.md.InsertUserModel(user)
 
 	if err != nil {
@@ -226,11 +230,12 @@ func (p *Controller) InsertMenuControl(c *gin.Context) {
 	if !p.UserValidation(c, ut.TypeOwner, userId) {
 		return
 	}
-	menu := model.NewMenu()
+	menu := model.Menu{}
 	if !p.MenuBind(c, &menu) {
 		return
 	}
 
+	model.NewMenu(&menu)
 	menuResult, err := p.md.InsertMenuModel(menu)
 
 	if err != nil {
@@ -381,10 +386,11 @@ func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 		return
 	}
 
-	NewOrder := model.NewOrder()
+	NewOrder := model.Order{}
 	if !p.OrderBind(c, &NewOrder) {
 		return
 	}
+	model.NewOrder(&NewOrder)
 	NewOrder.UserId = userId
 
 	orderResult, err := p.md.InsertOrderModel(NewOrder)
@@ -530,10 +536,11 @@ func (p *Controller) InsertReviewControl(c *gin.Context) {
 		return
 	}
 
-	newReview := model.NewReview()
+	newReview := model.Review{}
 	if !p.ReviewBind(c, &newReview) {
 		return
 	}
+	model.NewReview(&newReview)
 	newReview.UserId = userId
 
 	reviewResult, err := p.md.InsertReviewModel(newReview)
