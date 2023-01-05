@@ -33,7 +33,7 @@ import (
 // 		OrderDailyLimit: 5,
 // 	}
 // 	jsonValue, _ := json.Marshal(menu)
-// 	req, _ := http.NewRequest("POST", "http://localhost:8088/owner/menu", bytes.NewBuffer(jsonValue))
+// 	req, _ := http.NewRequest("POST", "http://localhost:8080/owner/menu", bytes.NewBuffer(jsonValue))
 // 	req.Header.Set("userId", ownerUserId)
 // 	req.Header.Set("menuId", menuId)
 // 	req.Header.Set("Content-Type", "application/json")
@@ -85,7 +85,7 @@ func TestInitControl(t *testing.T) {
 	for _, user := range userList {
 
 		jsonValue, _ := json.Marshal(user)
-		req, _ := http.NewRequest("POST", "http://localhost:8088/v1/user", bytes.NewBuffer(jsonValue))
+		req, _ := http.NewRequest("POST", "http://localhost:8080/v1/user", bytes.NewBuffer(jsonValue))
 		req.Header.Set("Content-Type", "application/json")
 
 		client := http.Client{}
@@ -197,7 +197,7 @@ func TestInitControl(t *testing.T) {
 	for _, menu := range menuList {
 
 		jsonValue, _ := json.Marshal(menu)
-		req, _ := http.NewRequest("POST", "http://localhost:8088/v1/owner/menu", bytes.NewBuffer(jsonValue))
+		req, _ := http.NewRequest("POST", "http://localhost:8080/v1/owner/menu", bytes.NewBuffer(jsonValue))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("userId", "1")
 		client := http.Client{}
@@ -401,7 +401,7 @@ func TestInitControl(t *testing.T) {
 	for _, order := range orderList {
 
 		jsonValue, _ := json.Marshal(order)
-		req, _ := http.NewRequest("POST", "http://localhost:8088/v1/customer/order", bytes.NewBuffer(jsonValue))
+		req, _ := http.NewRequest("POST", "http://localhost:8080/v1/customer/order", bytes.NewBuffer(jsonValue))
 		req.Header.Set("userId", "2")
 		req.Header.Set("Content-Type", "application/json")
 
