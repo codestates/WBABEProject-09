@@ -1,5 +1,5 @@
 [server] ##nomal type
-port = ":8088"
+port = ":8080"
 
 [db] #data access object
 host = "mongodb://localhost:27017"

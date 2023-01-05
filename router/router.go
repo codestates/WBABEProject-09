@@ -74,13 +74,13 @@ func (p *Router) Idx() *gin.Engine {
 	e.GET("/swagger/:any", ginSwg.WrapHandler(swgFiles.Handler))
 	docs.SwaggerInfo.Host = "localhost:8080"
 
-	e.POST("/user", p.ct.InsertUserControl) // 유저 등록 주소로 처음 환경 초기화시 사용을 위해 추가
-	e.POST("/test", p.ct.TestControl)       // 일부 작은 단위의 기능을 테스트하기 위한 주소로 swagger에 등록하지 않음
-
 	// 실시간으로 서버가 동작하는 환경에서 기능 변경을 고려해 version 그룹을 추가
 	// 기존 요청은 v1로 유지하면서 신규 요청은 v2로 전환 가능
-	version1 := e.Group("v1")
+	version1 := e.Group("v1", liteAuth())
 	{
+		version1.POST("/user", p.ct.InsertUserControl) // 유저 등록 주소로 처음 환경 초기화시 사용을 위해 추가
+		version1.POST("/test", p.ct.TestControl)       // 일부 작은 단위의 기능을 테스트하기 위한 주소로 swagger에 등록하지 않음
+
 		owner := version1.Group("owner", liteAuth())
 		{
 			owner.GET("/menu", p.ct.GetMenuControl) // 임시로 GetOk로 연결

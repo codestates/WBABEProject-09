@@ -51,7 +51,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/menu/detail"
+              "path": "/v1/customer/menu/detail"
             },
             "id": "748a9263-9933-4d2e-bef8-3652256d5b13",
             "name": "customer/menu/detail[get]",
@@ -117,7 +117,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/menu"
+              "path": "/v1/customer/menu"
             },
             "id": "77287424-a2d2-4c7a-8a81-54356b058ec2",
             "name": "customer/menu[get]",
@@ -187,7 +187,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/order/review"
+              "path": "/v1/customer/order/review"
             },
             "id": "3fa4b2cb-a29f-4312-b50f-0eeb007ccdad",
             "name": "customer/order/review[delete]",
@@ -247,7 +247,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/order/review"
+              "path": "/v1/customer/order/review"
             },
             "id": "87f60b79-c99a-4c07-8e66-21e62e168d60",
             "name": "customer/order/review[get]",
@@ -308,7 +308,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/order/review"
+              "path": "/v1/customer/order/review"
             },
             "id": "baa78708-54fc-4aac-a374-f5dbd7a385e2",
             "name": "customer/order/review[post]",
@@ -374,7 +374,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/order/review"
+              "path": "/v1/customer/order/review"
             },
             "id": "327873ee-eae1-48e1-836d-e47bdb5ced50",
             "name": "customer/order/review[put]",
@@ -439,7 +439,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/order"
+              "path": "/v1/customer/order"
             },
             "id": "ec903cc5-9141-4d10-947d-483a3e366318",
             "name": "customer/order[get]",
@@ -500,7 +500,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/order"
+              "path": "/v1/customer/order"
             },
             "id": "61facb11-afff-4750-9e9c-489a8b6f8c0e",
             "name": "customer/order[post]",
@@ -566,7 +566,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/order"
+              "path": "/v1/customer/order"
             },
             "id": "062bdca1-f7b5-4065-af42-796afaa64cfd",
             "name": "customer/order[put]",
@@ -631,7 +631,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/owner/menu/detail"
+              "path": "/v1/owner/menu/detail"
             },
             "id": "b650dc19-fe5a-4970-98d9-8511889c3375",
             "name": "owner/menu/detail[get]",
@@ -691,7 +691,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/owner/menu"
+              "path": "/v1/owner/menu"
             },
             "id": "e9431769-9cb7-482f-8aae-bb02ce1c61da",
             "name": "owner/menu[delete]",
@@ -758,7 +758,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/customer/menu"
+              "path": "/v1/customer/menu"
             },
             "id": "2dd03ea3-dcdb-4a24-99a0-cd408831c02f",
             "name": "owner/menu[get]",
@@ -814,7 +814,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/owner/menu"
+              "path": "/v1/owner/menu"
             },
             "id": "025d99a7-a518-4f3b-ac37-837bd139b262",
             "name": "owner/menu[post]",
@@ -872,7 +872,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/owner/menu"
+              "path": "/v1/owner/menu"
             },
             "id": "9e809f94-f293-4eaf-8f1e-de7d1151ebfd",
             "name": "owner/menu[put]",
@@ -938,7 +938,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/owner/order"
+              "path": "/v1/owner/order"
             },
             "id": "69e4ed91-73e8-4bdb-a27c-8df87ed0aced",
             "name": "owner/order[get]",
@@ -999,7 +999,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/owner/order"
+              "path": "/v1/owner/order"
             },
             "id": "433be348-9cd6-455a-8070-31b916c1c49c",
             "name": "owner/order[put]",
@@ -1065,7 +1065,7 @@
                 "version": "V11"
               },
               "host": "127.0.0.1:8080",
-              "path": "/user"
+              "path": "/v1/user"
             },
             "id": "ec9bed48-dde4-42eb-8a44-c941d4551ebd",
             "name": "user[post]",
