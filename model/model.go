@@ -418,11 +418,99 @@ func (p *Model) GetMenuModel(sortBy string, checkReview int) ([]primitive.M, err
 
 	var newMenu []primitive.M
 	// checkReview가 0이 아니면, Review 데이터를 결과에 포함시킴
-	checkReview = 0
 	if checkReview != 0 {
-		// 설계를 잘못해서 3 collection을 join 하려다 실패
-		// 이 부분은 1차 피드백 후 2차에서 다시 작업 예정
-		// - TODO - 설계 다시하기
+		// 설계를 유지하는 대신 복잡한 Join을 사용
+		// join 과정에서 배열속에 있는 key를 사용해 다른 컬렉션에 다시 join을 해야했기에 unwind를 사용
+		// 문제는 unwind를 사용하면서 오더나 리뷰가 없는 메뉴들에 경우엔 문서 자체가 제외되서 표시됨
+		// 즉, 리뷰가 존재하는 메뉴만 보이게됨
+		// 다른 방법이 있을꺼라 생각하지만, 시간이 없으니 일단 보류
+		// order에 들어가는 메뉴가 배열이기에 생기는 문제로, 설계 난이도를 낮추면 해결 가능할꺼라 판단됨
+		pipeline := mongo.Pipeline{
+			{
+				{Key: "$lookup", Value: bson.D{
+					{Key: "from", Value: "tOrderSave"},
+					{Key: "localField", Value: "menuId"},
+					{Key: "foreignField", Value: "menu.menuId"},
+					{Key: "pipeline", Value: bson.A{bson.D{
+						{Key: "$match", Value: bson.D{
+							{Key: "$expr", Value: bson.D{
+								{Key: "$and", Value: []interface{}{
+									bson.M{"$eq": bson.A{"$state", 7}},
+								}},
+							}},
+						}},
+					}}},
+					{Key: "as", Value: "menuOrder"},
+				}},
+			},
+			{
+				{Key: "$unwind", Value: bson.D{
+					{Key: "path", Value: "$menuOrder"},
+				}},
+			},
+			{
+				{Key: "$lookup", Value: bson.D{
+					{Key: "from", Value: "tReview"},
+					{Key: "let", Value: bson.M{
+						"order_day": "$menuOrder.orderDay",
+						"order_id":  "$menuOrder.orderId",
+					}},
+					{Key: "pipeline", Value: bson.A{bson.D{
+						{Key: "$match", Value: bson.D{
+							{Key: "$expr", Value: bson.D{
+								{Key: "$and", Value: []interface{}{
+									bson.M{"$eq": []string{"$orderDay", "$$order_day"}},
+									bson.M{"$eq": []string{"$orderId", "$$order_id"}},
+								}},
+							}},
+						}},
+					}}},
+					{Key: "as", Value: "orderReview"},
+				}},
+			},
+			{
+				{Key: "$unwind", Value: bson.D{
+					{Key: "path", Value: "$orderReview"},
+				}},
+			},
+
+			{
+				{Key: "$match", Value: bson.D{
+					{Key: "use", Value: true},
+				}},
+			},
+			{
+				{Key: "$group", Value: bson.D{
+					{Key: "_id", Value: "$_id"},
+					{Key: "menuId", Value: bson.M{"$first": "$menuId"}},
+					{Key: "category", Value: bson.M{"$first": "$category"}},
+					{Key: "name", Value: bson.M{"$first": "$name"}},
+					{Key: "price", Value: bson.M{"$first": "$price"}},
+					{Key: "racommend", Value: bson.M{"$first": "$racommend"}},
+					{Key: "star", Value: bson.M{"$first": "$star"}},
+					{Key: "orderState", Value: bson.M{"$first": "$orderState"}},
+					{Key: "orderCount", Value: bson.M{"$first": "$orderCount"}},
+					{Key: "reorderCount", Value: bson.M{"$first": "$reorderCount"}},
+					{Key: "createAt", Value: bson.M{"$first": "$createAt"}},
+					{Key: "review", Value: bson.M{"$push": bson.M{"userId": "$orderReview.userId",
+						"orderDay": "$orderReview.orderDay",
+						"orderId":  "$orderReview.orderId",
+						"star":     "$orderReview.star",
+						"content":  "$orderReview.content",
+						"createAt": "$orderReview.createAt",
+					}}},
+				}},
+			},
+		}
+		cursor, err := p.menuCol.Aggregate(context.TODO(), pipeline)
+		if err != nil {
+			log.Error("메뉴 조회 에러", err.Error())
+			return nil, err
+		}
+		if err = cursor.All(context.TODO(), &newMenu); err != nil {
+			log.Error("메뉴 조회 에러", err.Error())
+			return nil, err
+		}
 	} else {
 		// 삭제된 메뉴에 경우 표시하지 않음
 		filter := bson.M{"use": true}
