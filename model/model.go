@@ -486,7 +486,7 @@ func (p *Model) GetMenuModel(sortBy string, checkReview int) ([]primitive.M, err
 					{Key: "category", Value: bson.M{"$first": "$category"}},
 					{Key: "name", Value: bson.M{"$first": "$name"}},
 					{Key: "price", Value: bson.M{"$first": "$price"}},
-					{Key: "racommend", Value: bson.M{"$first": "$racommend"}},
+					{Key: "recommend", Value: bson.M{"$first": "$recommend"}},
 					{Key: "star", Value: bson.M{"$first": "$star"}},
 					{Key: "orderState", Value: bson.M{"$first": "$orderState"}},
 					{Key: "orderCount", Value: bson.M{"$first": "$orderCount"}},
@@ -499,6 +499,11 @@ func (p *Model) GetMenuModel(sortBy string, checkReview int) ([]primitive.M, err
 						"content":  "$orderReview.content",
 						"createAt": "$orderReview.createAt",
 					}}},
+				}},
+			},
+			{
+				{Key: "$sort", Value: bson.D{
+					{Key: sortBy, Value: -1},
 				}},
 			},
 		}
