@@ -16,7 +16,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/customer/menu": {
+        "/v1/customer/menu": {
             "get": {
                 "description": "menu data 조회를 위한 기능.",
                 "consumes": [
@@ -37,7 +37,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "리뷰 확인 여부",
                         "name": "checkReview",
-                        "in": "query"
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -53,7 +53,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/customer/menu/detail": {
+        "/v1/customer/menu/detail": {
             "get": {
                 "description": "menu data 조회를 위한 기능.",
                 "consumes": [
@@ -85,7 +85,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/customer/order": {
+        "/v1/customer/order": {
             "get": {
                 "description": "order data 조회를 위한 기능.",
                 "consumes": [
@@ -189,7 +189,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/customer/order/review": {
+        "/v1/customer/order/review": {
             "get": {
                 "description": "review data 확인을 위한 기능.",
                 "consumes": [
@@ -340,7 +340,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/owner/menu": {
+        "/v1/owner/menu": {
             "get": {
                 "description": "menu data 조회를 위한 기능.",
                 "consumes": [
@@ -361,7 +361,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "리뷰 확인 여부",
                         "name": "checkReview",
-                        "in": "query"
+                        "in": "header"
                     }
                 ],
                 "responses": {
@@ -490,7 +490,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/owner/menu/detail": {
+        "/v1/owner/menu/detail": {
             "get": {
                 "description": "menu data 조회를 위한 기능.",
                 "consumes": [
@@ -522,7 +522,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/owner/order": {
+        "/v1/owner/order": {
             "get": {
                 "description": "order data 조회를 위한 기능.",
                 "consumes": [
@@ -590,7 +590,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user": {
+        "/v1/user": {
             "post": {
                 "description": "user data 추가를 위한 기능.",
                 "consumes": [

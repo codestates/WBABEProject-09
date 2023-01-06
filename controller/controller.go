@@ -158,7 +158,7 @@ func (p *Controller) InsertUserControl(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			sortBy	query	string	false	"recommend, star, orderCount, date"
-//	@Param			checkReview	query	int	false	"리뷰 확인 여부"
+//	@Param			checkReview	header	int	false	"리뷰 확인 여부"
 //	@Router			/v1/customer/menu [get]
 //	@Router			/v1/owner/menu [get]
 //	@Success		200	{object}	[]model.Menu

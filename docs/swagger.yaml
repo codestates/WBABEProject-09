@@ -109,7 +109,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /customer/menu:
+  /v1/customer/menu:
     get:
       consumes:
       - application/json
@@ -120,7 +120,7 @@ paths:
         name: sortBy
         type: string
       - description: 리뷰 확인 여부
-        in: query
+        in: header
         name: checkReview
         type: integer
       produces:
@@ -133,7 +133,7 @@ paths:
               $ref: '#/definitions/model.Menu'
             type: array
       summary: call GetMenuControl, return menu data by []model.Menu
-  /customer/menu/detail:
+  /v1/customer/menu/detail:
     get:
       consumes:
       - application/json
@@ -154,7 +154,7 @@ paths:
               $ref: '#/definitions/model.Menu'
             type: array
       summary: call GetMenuDetailControl, return menu data by []model.Menu
-  /customer/order:
+  /v1/customer/order:
     get:
       consumes:
       - application/json
@@ -223,7 +223,7 @@ paths:
           schema:
             type: string
       summary: call UpdateCustomerOrderControl, return result by json.
-  /customer/order/review:
+  /v1/customer/order/review:
     delete:
       consumes:
       - application/json
@@ -324,7 +324,7 @@ paths:
           schema:
             type: string
       summary: call UpdateReviewControl, return result by json.
-  /owner/menu:
+  /v1/owner/menu:
     delete:
       consumes:
       - application/json
@@ -358,7 +358,7 @@ paths:
         name: sortBy
         type: string
       - description: 리뷰 확인 여부
-        in: query
+        in: header
         name: checkReview
         type: integer
       produces:
@@ -424,7 +424,7 @@ paths:
           schema:
             type: string
       summary: call UpdateMenuControl, return result by json.
-  /owner/menu/detail:
+  /v1/owner/menu/detail:
     get:
       consumes:
       - application/json
@@ -445,7 +445,7 @@ paths:
               $ref: '#/definitions/model.Menu'
             type: array
       summary: call GetMenuDetailControl, return menu data by []model.Menu
-  /owner/order:
+  /v1/owner/order:
     get:
       consumes:
       - application/json
@@ -490,7 +490,7 @@ paths:
           schema:
             type: string
       summary: call UpdateOwnerOrderControl, return result by json.
-  /user:
+  /v1/user:
     post:
       consumes:
       - application/json
