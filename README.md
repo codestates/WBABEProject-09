@@ -77,6 +77,7 @@ mongoDB: 도큐먼트 지향 데이터베이스 시스템
 ## 기능소개
 
 ![Go-order](https://user-images.githubusercontent.com/25821827/209678234-2cb03ddb-6505-4d4d-b200-4eb6bc9746df.png)
+내부 API 구조 및 환경은 서버 구동시 http://localhost:8080/swagger/index.html로 접근 가능
 API 테스트를 위해 Talend API Tester를 사용했으며, 테스트 내역을 Talend API Tester.json 파일로 저장함  
 Import를 통해서 테스트 환경 복사 가능
 
