@@ -120,7 +120,7 @@ func (p *Controller) ReviewBind(c *gin.Context, review *model.Review) bool {
 //	@Accept			json
 //	@Produce		json
 //	@Param			user	body	model.User	true	"{userId, name, email, phone, address, type}"
-//	@Router			/user [post]
+//	@Router			/v1/user [post]
 //	@Success		200	{object}	string
 func (p *Controller) InsertUserControl(c *gin.Context) {
 
@@ -159,8 +159,8 @@ func (p *Controller) InsertUserControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			sortBy	query	string	false	"recommend, star, orderCount, date"
 //	@Param			checkReview	query	int	false	"리뷰 확인 여부"
-//	@Router			/customer/menu [get]
-//	@Router			/owner/menu [get]
+//	@Router			/v1/customer/menu [get]
+//	@Router			/v1/owner/menu [get]
 //	@Success		200	{object}	[]model.Menu
 func (p *Controller) GetMenuControl(c *gin.Context) {
 
@@ -191,8 +191,8 @@ func (p *Controller) GetMenuControl(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			menuId	header	string	true	"Menu Id"
-//	@Router			/customer/menu/detail [get]
-//	@Router			/owner/menu/detail [get]
+//	@Router			/v1/customer/menu/detail [get]
+//	@Router			/v1/owner/menu/detail [get]
 //	@Success		200	{object}	[]model.Menu
 func (p *Controller) GetMenuDetailControl(c *gin.Context) {
 
@@ -222,7 +222,7 @@ func (p *Controller) GetMenuDetailControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Menu	true	"{category, name, price, recommend, orderState, orderDailyLimit}"
-//	@Router			/owner/menu [post]
+//	@Router			/v1/owner/menu [post]
 //	@Success		200	{object}	model.Menu
 func (p *Controller) InsertMenuControl(c *gin.Context) {
 
@@ -259,7 +259,7 @@ func (p *Controller) InsertMenuControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menuId	header	string	true	"Menu ID"
 //	@Param			menu	body	model.Menu	true	"{category, name, price, recommend, orderState, orderDailyLimit}"
-//	@Router			/owner/menu [put]
+//	@Router			/v1/owner/menu [put]
 //	@Success		200	{object}	string
 func (p *Controller) UpdateMenuControl(c *gin.Context) {
 
@@ -298,7 +298,7 @@ func (p *Controller) UpdateMenuControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menuId	header	string	true	"Menu ID"
-//	@Router			/owner/menu [delete]
+//	@Router			/v1/owner/menu [delete]
 //	@Success		200	{object}	string
 func (p *Controller) DeleteMenuControl(c *gin.Context) {
 
@@ -331,8 +331,8 @@ func (p *Controller) DeleteMenuControl(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
-//	@Router			/customer/order [get]
-//	@Router			/owner/order [get]
+//	@Router			/v1/customer/order [get]
+//	@Router			/v1/owner/order [get]
 //	@Success		200	{object}	[]model.Order
 func (p *Controller) GetOrderControl(c *gin.Context) {
 	userId, _ := strconv.Atoi(c.GetHeader("userId"))
@@ -376,7 +376,7 @@ func (p *Controller) GetOrderControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Order	true	"{userId, menu[{menuID, name}], phone, address}"
-//	@Router			/customer/order [post]
+//	@Router			/v1/customer/order [post]
 //	@Success		200	{object}	string
 func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 
@@ -416,7 +416,7 @@ func (p *Controller) InsertCustomerOrderControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Order	true	"{userId, orderDate, orderID , menu[{menuID, name}], phone, address}"
-//	@Router			/customer/order [put]
+//	@Router			/v1/customer/order [put]
 //	@Success		200	{object}	string
 func (p *Controller) UpdateCustomerOrderControl(c *gin.Context) {
 
@@ -452,7 +452,7 @@ func (p *Controller) UpdateCustomerOrderControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Order	true	"{orderDate, orderID , state}"
-//	@Router			/owner/order [put]
+//	@Router			/v1/owner/order [put]
 //	@Success		200	{object}	string
 func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
 
@@ -488,7 +488,7 @@ func (p *Controller) UpdateOwnerOrderControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			sortBy	query	string	false	"정렬할 컬럼명"
-//	@Router			/customer/order/review [get]
+//	@Router			/v1/customer/order/review [get]
 //	@Success		200	{object}	[]model.Review
 func (p *Controller) GetReviewControl(c *gin.Context) {
 
@@ -526,7 +526,7 @@ func (p *Controller) GetReviewControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			review	body	model.Review	true	"{orderDay, orderId, star, content}"
-//	@Router			/customer/order/review [post]
+//	@Router			/v1/customer/order/review [post]
 //	@Success		200	{object}	model.Review
 func (p *Controller) InsertReviewControl(c *gin.Context) {
 
@@ -565,7 +565,7 @@ func (p *Controller) InsertReviewControl(c *gin.Context) {
 //	@Produce		json
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			menu	body	model.Review	true	"{orderDay, orderId, star, content}"
-//	@Router			/customer/order/review [put]
+//	@Router			/v1/customer/order/review [put]
 //	@Success		200	{object}	string
 func (p *Controller) UpdateReviewControl(c *gin.Context) {
 
@@ -602,7 +602,7 @@ func (p *Controller) UpdateReviewControl(c *gin.Context) {
 //	@Param			userId	header	string	true	"User ID"
 //	@Param			orderDay	query	string	true	"Order Day"
 //	@Param			orderId	query	int	true	"Order Id"
-//	@Router			/customer/order/review [delete]
+//	@Router			/v1/customer/order/review [delete]
 //	@Success		200	{object}	string
 func (p *Controller) DeleteReviewControl(c *gin.Context) {
 
