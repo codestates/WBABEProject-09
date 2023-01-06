@@ -784,25 +784,75 @@ func (p *Model) InsertOrderModel(orderData Order) (*Order, error) {
 
 func (p *Model) UpdateCustomerOrderModel(orderData Order) error {
 
+	// 오더에 삭제된 메뉴 검증
+	err := p.CheckOrderMenuDeletedModel(&orderData)
+	if err != nil {
+		log.Error("오더 수정 에러, 메뉴 조회 실패", err.Error())
+		return err
+	}
+
 	var oldOrder Order
 	findFilter := bson.M{"userId": orderData.UserId, "orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
 	if err := p.orderCol.FindOne(context.TODO(), findFilter).Decode(&oldOrder); err != nil {
-		log.Error("오더 조회 에러", err.Error())
-		return err
+		// 실패 경우 완료된 경우일 수 있으니 orderSave에서 다시 조회
+		findSaveFilter := bson.M{"userId": orderData.UserId, "orderDay": orderData.OrderDay, "orderId": orderData.OrderId, "state": 7}
+		if err := p.orderSaveCol.FindOne(context.TODO(), findSaveFilter).Decode(&oldOrder); err != nil {
+			log.Error("오더 조회 에러", err.Error())
+			return err
+		}
 	}
 
 	// - TODO - 리턴된 비교map을 활용해 취소된 메뉴와 추가된 메뉴에 대한 menu count 증가 로직이 필요
 	// 시간 배분을 고려해 나중에 작업
-	_, compareResult := CompareMenu(oldOrder.Menu, orderData.Menu)
+	menuMap, compareResult := CompareMenu(oldOrder.Menu, orderData.Menu)
 
 	// 배달중 이상의 상태에서는 오더 추가가 불가능
-	if compareResult == 2 && orderData.State >= ot.StateInDelivery {
-		// 추가불가능 경우 리턴된 비교map을 활용해 기존 order외 추가건은 신규 오더로 전환시켜야함
-		// 시간상 - TODO - 로 menu count 작업시 같이 진행
-		log.Error("오더 상태 변경 에러")
-		errorMsg := fmt.Sprintf("오더를 추가할 수 없습니다. 현재상태: %s", ot.GetOrderStateText(orderData.State))
-		return errors.New(errorMsg)
-	} else if compareResult == 1 && orderData.State >= ot.StateCooking {
+	if compareResult == 2 && oldOrder.State >= ot.StateInDelivery {
+		// 추가불가능 경우 리턴된 비교map을 활용해 기존 order외 추가건은 신규 오더로 전환
+		log.Error("오더 추가 불가 신규오더로 변경")
+
+		orderMenu := []OrderMenu{}
+		for _, menu := range orderData.Menu {
+			// 기존 메뉴 검사에서 추가 메뉴인 경우에만 신규 오더로 넣음
+			if menuMap[menu.MenuId] == "new" {
+				orderMenu = append(orderMenu, menu)
+			}
+		}
+
+		now := time.Now()
+		day := now.Format("2006-01-02")
+		orderId, _ := p.GetOrderId(day)
+
+		// 기존 오더 정보에서 일부 정보를 그대로 가져와 필요 부분만 수정해 신규로 insert
+		orderData.OrderDay = day
+		orderData.OrderId = orderId
+		orderData.Menu = orderMenu
+		orderData.State = ot.StateReceiving
+		orderData.CreateAt = now
+		orderData.ModifyAt = now
+
+		_, err := p.orderCol.InsertOne(context.TODO(), orderData)
+
+		if err != nil {
+			log.Error("오더 추가 에러", err.Error())
+			return err
+		}
+
+		_, err = p.orderSaveCol.InsertOne(context.TODO(), orderData)
+
+		if err != nil {
+			log.Error("초기 오더 저장 에러", err.Error())
+		}
+		err = p.CheckOrderMenuModel(&orderData)
+
+		if err != nil {
+			log.Error("오더 메뉴 정산 에러", err.Error())
+		}
+
+		// 이후 수정 로직은 사용하지 않음으로 여기서 return
+		return nil
+
+	} else if compareResult == 1 && oldOrder.State >= ot.StateCooking {
 		// 조리중 이상의 상태에서는 오더 변경이 불가능
 		log.Error("오더 상태 변경 에러")
 		errorMsg := fmt.Sprintf("오더를 변경할 수 없습니다. 현재상태: %s", ot.GetOrderStateText(orderData.State))
@@ -827,7 +877,7 @@ func (p *Model) UpdateCustomerOrderModel(orderData Order) error {
 
 	updateFilter := bson.M{"userId": orderData.UserId, "orderDay": orderData.OrderDay, "orderId": orderData.OrderId}
 	update := bson.D{{Key: "$set", Value: updateTarget}}
-	_, err := p.orderCol.UpdateOne(context.TODO(), updateFilter, update)
+	_, err = p.orderCol.UpdateOne(context.TODO(), updateFilter, update)
 	if err != nil {
 		log.Error("오더 수정 에러", err.Error())
 	}
